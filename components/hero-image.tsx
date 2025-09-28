@@ -38,7 +38,7 @@ export function HeroImage() {
   const yCard4 = useTransform(scrollYProgress, [0, 1], ['-20%', '20%'])
 
   return (
-    <section ref={ref} className="pt-32 pb-24 px-6 relative overflow-hidden">
+    <section ref={ref} className="pt-40 pb-24 px-6 relative overflow-hidden">
       {/* Background Elements con Paralaje */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-slate-50/30"
@@ -61,35 +61,30 @@ export function HeroImage() {
           variants={stagger}
         >
           {/* Columna Izquierda - Título y contenido */}
-          <motion.div className="space-y-10" variants={fadeInUp}>
-            <div className="space-y-6">
-              <motion.div
-                className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
-                variants={fadeInUp}
-              >
-                <Droplets className="w-4 h-4 mr-2" />
-                Monitoreo Inteligente
-              </motion.div>
-
-              <h1 className="text-6xl lg:text-7xl font-light text-slate-900 leading-tight relative">
+          <motion.div className="space-y-6 max-w-4xl" variants={fadeInUp}>
+            <div className="space-y-3">
+              {/* Sistema de Gestión de Áreas Naturales Protegidas */}
+              <h1 className="text-7xl lg:text-6xl font-light text-slate-900 leading-tight relative">
                 {/* Gradiente de fondo con blur */}
                 <div className="absolute left-32 top-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-xl"></div>
 
-                <span className="block font-semibold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent relative z-1">
-                  Calidad del
+                <span className="block font-semibold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent relative z-10">
+                  Sistema de Gestión
                 </span>
-                <span className="block font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent relative z-1">
-                  Agua
+                <span className="block font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent relative z-10">
+                  de Áreas Naturales
                 </span>
-                <span className="block font-light text-slate-600 relative z-10">en Tiempo Real</span>
+                <span className="block font-light text-slate-600 relative z-10">
+                   Protegidas
+                </span>
               </h1>
 
-              <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
+              <p className="text-lg lg:text-xl text-slate-600 leading-relaxed max-w-xl">
                 Plataforma avanzada que combina análisis predictivo, visualización de datos y monitoreo continuo para la gestión inteligente de recursos hídricos.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-5">
               <Button className="bg-gray-500 hover:bg-gray-600 text-white" size="lg">
                 <Eye className="w-5 h-5 mr-2" />
                 Explorar Datos
@@ -99,8 +94,8 @@ export function HeroImage() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-
           </motion.div>
+
 
           {/* Columna Derecha - Mapa y Tarjetas con Paralaje */}
           <motion.div

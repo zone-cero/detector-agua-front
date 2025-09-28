@@ -1,11 +1,11 @@
 "use client"
 import React from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Droplets, 
-  TrendingUp, 
-  BarChart3, 
-  MapPin, 
+import {
+  Droplets,
+  TrendingUp,
+  BarChart3,
+  MapPin,
   ArrowRight,
   Calendar,
   Camera,
@@ -23,6 +23,10 @@ import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { HeroImage } from '../components/hero-image'
+import MapComponent from '@/components/MapComponent';
+import PhotoAnalyzer from '@/components/PhotoAnalyzer'
+
+
 const HomePage: React.FC = () => {
   const fadeInUp = {
     initial: { opacity: 0, y: 40 },
@@ -41,30 +45,31 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <Header />
-      
+
       {/* Hero Section */}
 
-      <HeroImage/>
-      {/* Features Section */}
-      <section className="py-24 bg-[#f6f6f6] border-b border-t border-b-gray-200 backdrop-blur-sm">
+      <HeroImage />
+      {/* HERRAMIENTAS ESPECIALIZADAS Section */}
+      <section className="py-24 bg-white border-b border-t border-b-gray-200 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6">
-          <motion.div 
-            className="text-center mb-20"
+          <motion.div
+            className="mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-5xl font-light text-slate-900 mb-6">
-              Herramientas <span className="font-semibold">Especializadas</span>
+            <h2 className="text-4xl font-light text-red-800 mb-4 uppercase tracking-wide">
+              HERRAMIENTAS ESPECIALIZADAS
             </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+            <div className="w-20 h-1 bg-red-800 mb-8"></div>
+            <p className="text-xl text-slate-600 max-w-3xl">
               Accede a análisis histórico, predicciones avanzadas y visualizaciones en tiempo real
             </p>
           </motion.div>
-          
-          <motion.div 
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+
+          <motion.div
+            className="grid grid-cols-3 gap-4"
             initial="initial"
             whileInView="animate"
             variants={stagger}
@@ -76,55 +81,56 @@ const HomePage: React.FC = () => {
                 title: "Histórico",
                 description: "Análisis temporal completo",
                 stats: ["1,247 imágenes", "2.4M registros", "5 años de datos"],
-                color: "blue",
-                gradient: "from-blue-500 to-blue-600"
+                gradient: "from-red-700 to-red-800",
               },
               {
                 icon: Activity,
                 title: "Predicción",
                 description: "Modelos de IA avanzados",
                 stats: ["94.2% precisión", "Alertas tempranas", "ML optimizado"],
-                color: "emerald",
-                gradient: "from-emerald-500 to-emerald-600"
+                gradient: "from-red-600 to-red-700",
               },
               {
                 icon: Layers,
                 title: "Análisis",
                 description: "Visualización inteligente",
                 stats: ["Tiempo real", "Comparativas", "Dashboards"],
-                color: "purple",
-                gradient: "from-purple-500 to-purple-600"
+                gradient: "from-red-800 to-red-900",
               },
-              {
-                icon: Globe,
-                title: "Monitoreo",
-                description: "Seguimiento continuo",
-                stats: ["24 estaciones", "Update 1min", "Cobertura total"],
-                color: "orange",
-                gradient: "from-orange-500 to-orange-600"
-              }
+              // {
+              //   icon: Globe,
+              //   title: "Monitoreo",
+              //   description: "Seguimiento continuo",
+              //   stats: ["24 estaciones", "Update 1min", "Cobertura total"],
+              //   gradient: "from-red-700 to-red-800",
+              // },
             ].map((feature, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <Card className="p-8 h-full group cursor-pointer">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-${feature.color}-500/20`}>
-                    <feature.icon className="w-8 h-8 text-white" />
+                <Card className="p-4 h-full group cursor-pointer transition-all duration-300 bg-gray-50 border-0 shadow-sm">
+                  <div
+                    className={`w-12 h-12 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
+                  >
+                    <feature.icon className="w-6 h-6 text-white" />
                   </div>
-                  
-                  <h3 className="text-xl font-semibold text-slate-900 mb-3">{feature.title}</h3>
-                  <p className="text-slate-600 mb-6">{feature.description}</p>
-                  
-                  <div className="space-y-3 mb-8">
+
+                  <h3 className="text-lg font-semibold text-red-800 mb-2">{feature.title}</h3>
+                  <p className="text-slate-600 mb-4 text-sm">{feature.description}</p>
+
+                  <div className="space-y-2 mb-4">
                     {feature.stats.map((stat, i) => (
-                      <div key={i} className="flex items-center text-sm text-slate-500">
-                        <div className={`w-2 h-2 bg-${feature.color}-400 rounded-full mr-3`}></div>
+                      <div key={i} className="flex items-center text-xs text-slate-500">
+                        <div className="w-1.5 h-1.5 bg-red-600 rounded-full mr-2"></div>
                         {stat}
                       </div>
                     ))}
                   </div>
-                  
-                  <Button variant="ghost" className="w-full group-hover:bg-slate-50 transition-colors">
+
+                  <Button
+                    variant="ghost"
+                    className="w-full group-hover:bg-slate-50 transition-colors text-yellow-600 hover:text-yellow-700 text-sm"
+                  >
                     Explorar
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-3 h-3 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Card>
               </motion.div>
@@ -132,11 +138,13 @@ const HomePage: React.FC = () => {
           </motion.div>
         </div>
       </section>
+      {/* <MapComponent /> */}
+      <PhotoAnalyzer />
 
       {/* Updates Section */}
       <section className="py-24 bg-gradient-to-br from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-6">
-          <motion.div 
+          <motion.div
             className="text-center mb-20"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -151,7 +159,7 @@ const HomePage: React.FC = () => {
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="grid lg:grid-cols-2 gap-12"
             initial="initial"
             whileInView="animate"
@@ -163,25 +171,25 @@ const HomePage: React.FC = () => {
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-blue-500/20">
                   <Shield className="w-10 h-10 text-white" />
                 </div>
-                
+
                 <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-full mb-6">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                   Mejora Importante
                 </div>
-                
+
                 <h3 className="text-2xl font-semibold text-slate-900 mb-4">
                   Calidad del Agua Mejorada en 15%
                 </h3>
-                
+
                 <p className="text-slate-600 mb-8 leading-relaxed">
                   Los análisis recientes muestran mejoras significativas en oxígeno disuelto y reducción de turbidez en las últimas dos semanas.
                 </p>
-                
+
                 <div className="flex items-center text-sm text-slate-500 mb-8">
                   <Clock className="w-4 h-4 mr-2" />
                   <span>Hace 2 días • Análisis Completo</span>
                 </div>
-                
+
                 <Button variant="secondary" className="w-full">
                   Leer Reporte Completo
                 </Button>
@@ -228,7 +236,7 @@ const HomePage: React.FC = () => {
                   </div>
                 </Card>
               ))}
-              
+
               <Button variant="ghost" className="w-full">
                 Ver Todas las Actualizaciones
               </Button>
@@ -237,7 +245,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-   
+
 
       <Footer />
     </div>

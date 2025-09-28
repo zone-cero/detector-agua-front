@@ -4,6 +4,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
 @custom-variant dark (&:is(.dark *));
 
+
+@import 'leaflet/dist/leaflet.css';
+@import 'leaflet-draw/dist/leaflet.draw.css';
+
+
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
