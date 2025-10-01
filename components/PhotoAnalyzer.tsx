@@ -48,10 +48,10 @@ const PhotoAnalyzer = () => {
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<UploadResponse | null>(null)
-  
+
   const [ecosystemName, setEcosystemName] = useState<string>("")
-  const [ecosystemId, setEcosystemId] = useState<string | null>(null) 
-  const [descriptions, setDescriptions] = useState<string[]>([]) 
+  const [ecosystemId, setEcosystemId] = useState<string | null>(null)
+  const [descriptions, setDescriptions] = useState<string[]>([])
 
   const [filterValues, setFilterValues] = useState<FilterValues>({
     brightness: 100,
@@ -65,10 +65,10 @@ const PhotoAnalyzer = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
-  // URL del Proxy (para evitar CORS en la llamada a la API)
-  const API_BASE_URL = "/api/backend"
+
+  const API_BASE_URL = "http://72.60.127.75"
   // URL remota real (solo para cargar las imágenes que ya están en el servidor)
-  const REMOTE_BASE_URL = "http://72.60.127.75" 
+  // const REMOTE_BASE_URL = "http://72.60.127.75" 
 
   // ------------------------------ //
   // EFECTOS Y UTILIDADES //
@@ -77,7 +77,7 @@ const PhotoAnalyzer = () => {
   useEffect(() => {
     const urls = selectedFiles.map((file) => URL.createObjectURL(file))
     setImagePreviewUrls(urls)
-    setAnalysisResult(null) 
+    setAnalysisResult(null)
 
     if (selectedFiles.length > descriptions.length) {
       setDescriptions((prev) => [
@@ -119,7 +119,7 @@ const PhotoAnalyzer = () => {
     setSelectedFiles([])
     setAnalysisResult(null)
     setDescriptions([])
-    setEcosystemName("") 
+    setEcosystemName("")
     setEcosystemId(null)
     setFilterValues({
       brightness: 100,
@@ -155,29 +155,29 @@ const PhotoAnalyzer = () => {
 
     try {
       const formData = new FormData()
-      
+
       formData.append("ecosystem_name", ecosystemName.trim())
       if (ecosystemId) {
         formData.append("ecosystem_id", ecosystemId)
       }
 
       selectedFiles.forEach((file) => {
-        formData.append("images", file) 
+        formData.append("images", file)
       })
 
       if (descriptions.some(desc => desc.trim() !== "")) {
         formData.append("descriptions", JSON.stringify(descriptions))
       }
-      
+
       // La solicitud usa la ruta local de proxy: /api/backend/images/upload-multiple/
       const response = await fetch(`${API_BASE_URL}/images/upload-multiple/`, {
         method: "POST",
         body: formData,
       })
-      
+
       if (!response.ok) {
         let errorMessage = `Error del servidor: ${response.status} ${response.statusText}`
-        
+
         try {
           const errorData = await response.json()
           errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData) || errorMessage
@@ -185,16 +185,16 @@ const PhotoAnalyzer = () => {
           const textError = await response.text()
           if (textError) errorMessage = textError
         }
-        
+
         throw new Error(errorMessage)
       }
 
       const result: UploadResponse = await response.json()
       setAnalysisResult(result)
-      
+
       // Muestra la respuesta en consola
       console.log("RESPUESTA COMPLETA DE LA API:", result);
-      
+
       toast({
         title: "Subida y Análisis Completado",
         description: result.message || "Las imágenes se subieron y analizaron con éxito.",
@@ -203,9 +203,9 @@ const PhotoAnalyzer = () => {
 
     } catch (error) {
       console.error("ERROR al subir y analizar las imágenes:", error)
-      
+
       let errorMessage = "Hubo un problema al conectar con el servidor. Inténtalo de nuevo."
-      
+
       if (error instanceof Error) {
         if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
           errorMessage = "No se pudo conectar con el servidor (o el proxy falló). Verifica tu configuración de Next.js y la API remota."
@@ -237,33 +237,33 @@ const PhotoAnalyzer = () => {
         <div className="grid md:grid-cols-2 gap-12">
           {/* Sección de Carga y Previsualización */}
           <div className="flex flex-col gap-6">
-              {/* Campo para Ecosystem Name/ID */}
-              <div className="p-4 bg-white border border-gray-300 rounded-lg shadow-sm">
-                <h3 className="text-xl font-semibold text-red-800 mb-4">Información del Cuerpo de Agua</h3>
-                <div className="space-y-4">
-                    <div>
-                        <Label htmlFor="ecosystem-name" className="text-sm font-medium text-gray-700">Nombre del Cuerpo de Agua *</Label>
-                        <Input 
-                            id="ecosystem-name" 
-                            value={ecosystemName} 
-                            onChange={(e) => setEcosystemName(e.target.value)} 
-                            placeholder="Ej: Laguna de Términos" 
-                            className="mt-1"
-                            disabled={loading}
-                        />
-                    </div>
-                    <div>
-                        <Label htmlFor="ecosystem-id" className="text-sm font-medium text-gray-700">ID del Ecosistema (Opcional)</Label>
-                        <Input 
-                            id="ecosystem-id" 
-                            value={ecosystemId || ''} 
-                            onChange={(e) => setEcosystemId(e.target.value || null)} 
-                            placeholder="Ej: 12345 (Para actualizar)" 
-                            className="mt-1"
-                            disabled={loading}
-                        />
-                    </div>
+            {/* Campo para Ecosystem Name/ID */}
+            <div className="p-4 bg-white border border-gray-300 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-red-800 mb-4">Información del Cuerpo de Agua</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="ecosystem-name" className="text-sm font-medium text-gray-700">Nombre del Cuerpo de Agua *</Label>
+                  <Input
+                    id="ecosystem-name"
+                    value={ecosystemName}
+                    onChange={(e) => setEcosystemName(e.target.value)}
+                    placeholder="Ej: Laguna de Términos"
+                    className="mt-1"
+                    disabled={loading}
+                  />
                 </div>
+                <div>
+                  <Label htmlFor="ecosystem-id" className="text-sm font-medium text-gray-700">ID del Ecosistema (Opcional)</Label>
+                  <Input
+                    id="ecosystem-id"
+                    value={ecosystemId || ''}
+                    onChange={(e) => setEcosystemId(e.target.value || null)}
+                    placeholder="Ej: 12345 (Para actualizar)"
+                    className="mt-1"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
             </div>
             {selectedFiles.length === 0 ? (
               <FileUploadArea
@@ -277,9 +277,9 @@ const PhotoAnalyzer = () => {
                   imagePreviewUrls={imagePreviewUrls}
                   getImageFilterStyle={getImageFilterStyle}
                   onRemoveFile={handleRemoveFile}
-                  descriptions={descriptions} 
+                  descriptions={descriptions}
                   onDescriptionChange={(index, desc) => {
-                    setDescriptions((prev) => 
+                    setDescriptions((prev) =>
                       prev.map((item, i) => i === index ? desc : item)
                     )
                   }}
@@ -291,13 +291,13 @@ const PhotoAnalyzer = () => {
 
           {/* Sección de Controles y Resultados */}
           <ImageControls
-            isDisabled={isControlsDisabled || !ecosystemName.trim()} 
+            isDisabled={isControlsDisabled || !ecosystemName.trim()}
             filterValues={filterValues}
             filterKeys={filterKeys}
             onSliderChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
             onAnalyze={handleAnalyze}
             loading={loading}
-            analysisResult={analysisResult} 
+            analysisResult={analysisResult}
           />
         </div>
       </div>
@@ -314,30 +314,30 @@ const ImagePreviews = ({ imagePreviewUrls, getImageFilterStyle, onRemoveFile, de
     {imagePreviewUrls.map((url: string, index: number) => (
       <div key={index} className="relative shadow-md rounded-lg overflow-hidden group border border-gray-200 bg-white">
         <div className="aspect-[4/3] relative">
-            <img
+          <img
             src={url || "/placeholder.svg"}
             alt={`Vista previa ${index + 1}`}
             className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
             style={getImageFilterStyle()}
-            />
-            <Button
+          />
+          <Button
             onClick={() => onRemoveFile(index)}
             variant="ghost"
             aria-label={`Eliminar imagen ${index + 1}`}
             className="absolute top-2 right-2 p-1 h-auto w-auto bg-black bg-opacity-40 text-white rounded-full transition-opacity opacity-0 group-hover:opacity-100 z-10"
-            >
+          >
             <X size={16} />
-            </Button>
+          </Button>
         </div>
         <div className="p-2 border-t border-gray-200">
-            <Label htmlFor={`desc-${index}`} className="text-xs font-medium text-gray-600">Descripción (Opcional)</Label>
-            <Input
-              id={`desc-${index}`}
-              value={descriptions[index] || ""}
-              onChange={(e) => onDescriptionChange(index, e.target.value)}
-              placeholder={`Descripción para ${index + 1}`}
-              className="mt-1 h-8 text-sm"
-            />
+          <Label htmlFor={`desc-${index}`} className="text-xs font-medium text-gray-600">Descripción (Opcional)</Label>
+          <Input
+            id={`desc-${index}`}
+            value={descriptions[index] || ""}
+            onChange={(e) => onDescriptionChange(index, e.target.value)}
+            placeholder={`Descripción para ${index + 1}`}
+            className="mt-1 h-8 text-sm"
+          />
         </div>
       </div>
     ))}
@@ -438,67 +438,67 @@ const ImageControls = ({
 
 // Componente para mostrar la respuesta cruda de la API
 const AnalysisResults = ({ result, remoteBaseUrl }: { result: UploadResponse, remoteBaseUrl: string }) => {
-    const BASE_URL = remoteBaseUrl; 
+  const BASE_URL = remoteBaseUrl;
 
-    return (
-        <div className="mt-8 p-6 bg-white border border-gray-300 rounded-lg shadow-sm">
-            <h3 className="font-bold text-red-800 text-2xl mb-2 text-center uppercase">Resultados del API</h3>
-            <div className="w-20 h-0.5 bg-red-800 mx-auto mb-4"></div>
-            
-            {/* Información General */}
-            <div className="text-center mb-6 p-4 border rounded-lg bg-gray-100">
-                <p className="text-gray-600 text-lg">
-                    Mensaje: <span className="font-extrabold text-red-800">{result.message}</span>
-                </p>
-                <p className="text-gray-500 text-sm">
-                    Ecosistema: {result.ecosystem_name} (ID: {result.ecosystem_id})
-                </p>
-            </div>
+  return (
+    <div className="mt-8 p-6 bg-white border border-gray-300 rounded-lg shadow-sm">
+      <h3 className="font-bold text-red-800 text-2xl mb-2 text-center uppercase">Resultados del API</h3>
+      <div className="w-20 h-0.5 bg-red-800 mx-auto mb-4"></div>
 
-            <div className="mt-4 border-t border-gray-300 pt-4">
-                <h4 className="font-semibold text-red-700 mb-4 text-center">Detalle por Imagen (Respuesta Cruda):</h4>
-                <ul className="space-y-6 max-h-96 overflow-y-auto pr-2">
-                    {/* Iteración sobre el array 'images' */}
-                    {result.images.map((res) => (
-                        <li
-                            key={res.id}
-                            className="flex flex-col md:flex-row items-start justify-between text-gray-600 bg-gray-50 p-4 rounded-lg shadow-md border-2 border-red-200"
-                        >
-                            <div className="flex flex-col flex-1 w-full md:w-auto">
-                                <div className="grid grid-cols-1 gap-y-1 text-sm w-full">
-                                    <p><span className="font-bold text-red-700">id:</span> {res.id}</p>
-                                    <p><span className="font-bold text-gray-700">image:</span> <span className="break-all">{res.image}</span></p>
-                                    <p><span className="font-bold text-gray-700">description:</span> {res.description || "[]"}</p>
-                                    <p><span className="font-bold text-blue-700">water_percentage:</span> {res.water_percentage}</p>
-                                    <p><span className="font-bold text-blue-700">water_area_m2:</span> {res.water_area_m2}</p>
-                                    <p><span className="font-bold text-green-700">vegetation_percentage:</span> {res.vegetation_percentage}</p>
-                                    <p><span className="font-bold text-green-700">vegetation_area_m2:</span> {res.vegetation_area_m2}</p>
-                                </div>
-                            </div>
+      {/* Información General */}
+      <div className="text-center mb-6 p-4 border rounded-lg bg-gray-100">
+        <p className="text-gray-600 text-lg">
+          Mensaje: <span className="font-extrabold text-red-800">{result.message}</span>
+        </p>
+        <p className="text-gray-500 text-sm">
+          Ecosistema: {result.ecosystem_name} (ID: {result.ecosystem_id})
+        </p>
+      </div>
 
-                            {/* Vista previa de la imagen subida */}
-                            <div className="flex-shrink-0 mt-4 md:mt-0 md:ml-4 flex justify-center">
-                                {res.image && (
-                                    <div className="flex flex-col items-center">
-                                        <img
-                                            src={`${BASE_URL}${res.image}`} 
-                                            alt={`Imagen ${res.id}`}
-                                            className="w-32 h-24 object-cover rounded-md border-2 border-gray-300 shadow-inner"
-                                            onError={(e) => {
-                                                e.currentTarget.onerror = null;
-                                                e.currentTarget.src="/placeholder.svg"; 
-                                            }}
-                                        />
-                                        <span className="text-xs text-gray-500 mt-1">Vista Previa</span>
-                                    </div>
-                                )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </div>
-    );
+      <div className="mt-4 border-t border-gray-300 pt-4">
+        <h4 className="font-semibold text-red-700 mb-4 text-center">Detalle por Imagen (Respuesta Cruda):</h4>
+        <ul className="space-y-6 max-h-96 overflow-y-auto pr-2">
+          {/* Iteración sobre el array 'images' */}
+          {result.images.map((res) => (
+            <li
+              key={res.id}
+              className="flex flex-col md:flex-row items-start justify-between text-gray-600 bg-gray-50 p-4 rounded-lg shadow-md border-2 border-red-200"
+            >
+              <div className="flex flex-col flex-1 w-full md:w-auto">
+                <div className="grid grid-cols-1 gap-y-1 text-sm w-full">
+                  <p><span className="font-bold text-red-700">id:</span> {res.id}</p>
+                  <p><span className="font-bold text-gray-700">image:</span> <span className="break-all">{res.image}</span></p>
+                  <p><span className="font-bold text-gray-700">description:</span> {res.description || "[]"}</p>
+                  <p><span className="font-bold text-blue-700">water_percentage:</span> {res.water_percentage}</p>
+                  <p><span className="font-bold text-blue-700">water_area_m2:</span> {res.water_area_m2}</p>
+                  <p><span className="font-bold text-green-700">vegetation_percentage:</span> {res.vegetation_percentage}</p>
+                  <p><span className="font-bold text-green-700">vegetation_area_m2:</span> {res.vegetation_area_m2}</p>
+                </div>
+              </div>
+
+              {/* Vista previa de la imagen subida */}
+              <div className="flex-shrink-0 mt-4 md:mt-0 md:ml-4 flex justify-center">
+                {res.image && (
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={`${BASE_URL}${res.image}`}
+                      alt={`Imagen ${res.id}`}
+                      className="w-32 h-24 object-cover rounded-md border-2 border-gray-300 shadow-inner"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
+                    />
+                    <span className="text-xs text-gray-500 mt-1">Vista Previa</span>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 }
 
 export default PhotoAnalyzer
