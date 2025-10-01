@@ -7,7 +7,8 @@ import {
   BarChart3,
   MapPin,
   Eye,
-  ArrowRight
+  ArrowRight,
+  Image
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -36,6 +37,36 @@ export function HeroImage() {
   const yCard2 = useTransform(scrollYProgress, [0, 1], ['-15%', '15%'])
   const yCard3 = useTransform(scrollYProgress, [0, 1], ['-10%', '10%'])
   const yCard4 = useTransform(scrollYProgress, [0, 1], ['-20%', '20%'])
+
+  // Función para manejar la navegación por hash
+  const handleCardClick = (section: string) => {
+    switch (section) {
+      case 'analysis':
+        window.location.href = '/#photo-analyzer'
+        break
+      case 'trends':
+        window.location.href = '/#tools'
+        break
+      case 'quality':
+        window.location.href = '/#tools'
+        break
+      case 'location':
+        window.location.href = '/#map'
+        break
+      default:
+        break
+    }
+  }
+
+  // Función para explorar datos
+  const handleExploreData = () => {
+    window.location.href = '/#photo-analyzer'
+  }
+
+  // Función para ver demostración
+  const handleViewDemo = () => {
+    window.location.href = '/#tools'
+  }
 
   return (
     <section ref={ref} className="pt-40 pb-24 px-6 relative overflow-hidden">
@@ -85,17 +116,27 @@ export function HeroImage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-5">
-              <Button className="bg-gray-500 hover:bg-gray-600 text-white" size="lg">
+              <Button 
+                className="bg-gray-500 hover:bg-gray-600 text-white border-0 hover:border" 
+                style={{ borderColor: '#D4B483' }}
+                size="lg"
+                onClick={handleExploreData}
+              >
                 <Eye className="w-5 h-5 mr-2" />
                 Explorar Datos
               </Button>
-              <Button variant="secondary" size="lg">
+              <Button 
+                variant="secondary" 
+                size="lg"
+                className="border border-gray-300 hover:border"
+                style={{ borderColor: '#D4B483' }}
+                onClick={handleViewDemo}
+              >
                 Ver Demostración
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </motion.div>
-
 
           {/* Columna Derecha - Mapa y Tarjetas con Paralaje */}
           <motion.div
@@ -118,15 +159,20 @@ export function HeroImage() {
                   y: yMap // Aplicar paralaje al mapa
                 }}
               ></motion.div>
+              
               <div className="space-y-4 relative z-10">
                 <motion.div style={{ y: yCard1 }}>
-                  <Card className="p-4 group cursor-pointer backdrop-blur-sm h-52 w-64" hover>
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-50/70 to-blue-100/70 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Card 
+                    className="p-6 group cursor-pointer backdrop-blur-sm h-64 w-64 hover:shadow-md transition-all duration-300 border border-gray-200 hover:border"
+                    style={{ borderColor: '#D4B483' }}
+                    onClick={() => handleCardClick('trends')}
+                  >
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-50/70 to-blue-100/70 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                       <TrendingUp className="w-7 h-7 text-blue-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">Tendencias</h3>
-                    <p className="text-slate-600 text-sm">Análisis predictivo avanzado</p>
-                    <div className=" flex items-center text-xs text-slate-500">
+                    <h3 className="text-lg font-semibold text-slate-900 mt-4">Tendencias</h3>
+                    <p className="text-slate-600 text-sm mt-2">Análisis predictivo avanzado</p>
+                    <div className="flex items-center text-xs text-slate-500 mt-4">
                       <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                       Activo
                     </div>
@@ -134,13 +180,17 @@ export function HeroImage() {
                 </motion.div>
 
                 <motion.div style={{ y: yCard2 }}>
-                  <Card className="p-4 group cursor-pointer backdrop-blur-sm h-50 w-60" hover>
-                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-50/70 to-emerald-100/70 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Card 
+                    className="p-6 group cursor-pointer backdrop-blur-sm h-64 w-60 hover:shadow-md transition-all duration-300 border border-gray-200 hover:border"
+                    style={{ borderColor: '#D4B483' }}
+                    onClick={() => handleCardClick('quality')}
+                  >
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-50/70 to-emerald-100/70 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                       <Droplets className="w-7 h-7 text-emerald-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">Calidad</h3>
-                    <p className="text-slate-600 text-sm">Monitoreo continuo</p>
-                    <div className=" flex items-center text-xs text-slate-500">
+                    <h3 className="text-lg font-semibold text-slate-900 mt-4">Calidad</h3>
+                    <p className="text-slate-600 text-sm mt-2">Monitoreo continuo</p>
+                    <div className="flex items-center text-xs text-slate-500 mt-4">
                       <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                       Actualizado
                     </div>
@@ -150,13 +200,17 @@ export function HeroImage() {
 
               <div className="space-y-6 pt-12 relative z-10">
                 <motion.div style={{ y: yCard3 }}>
-                  <Card className="p-4 group cursor-pointer backdrop-blur-sm h-50 w-60" hover>
-                    <div className="w-14 h-14 bg-gradient-to-br from-purple-50/70 to-purple-100/70 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <BarChart3 className="w-7 h-7 text-purple-600" />
+                  <Card 
+                    className="p-6 group cursor-pointer backdrop-blur-sm h-64 w-60 hover:shadow-md transition-all duration-300 border border-gray-200 hover:border"
+                    style={{ borderColor: '#D4B483' }}
+                    onClick={() => handleCardClick('analysis')}
+                  >
+                    <div className="w-14 h-14 bg-gradient-to-br from-purple-50/70 to-purple-100/70 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                      <Image className="w-7 h-7 text-purple-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">Análisis</h3>
-                    <p className="text-slate-600 text-sm">Reportes inteligentes</p>
-                    <div className=" flex items-center text-xs text-slate-500">
+                    <h3 className="text-lg font-semibold text-slate-900 mt-4">Análisis</h3>
+                    <p className="text-slate-600 text-sm mt-2">Análisis mediante imágenes</p>
+                    <div className="flex items-center text-xs text-slate-500 mt-4">
                       <div className="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
                       En línea
                     </div>
@@ -164,13 +218,17 @@ export function HeroImage() {
                 </motion.div>
 
                 <motion.div style={{ y: yCard4 }}>
-                  <Card className="p-4 group cursor-pointer backdrop-blur-sm h-50 w-52" hover>
-                    <div className="w-14 h-14 bg-gradient-to-br from-orange-50/70 to-orange-100/70 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Card 
+                    className="p-6 group cursor-pointer backdrop-blur-sm h-64 w-52 hover:shadow-md transition-all duration-300 border border-gray-200 hover:border"
+                    style={{ borderColor: '#D4B483' }}
+                    onClick={() => handleCardClick('location')}
+                  >
+                    <div className="w-14 h-14 bg-gradient-to-br from-orange-50/70 to-orange-100/70 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                       <MapPin className="w-7 h-7 text-orange-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">Ubicación</h3>
-                    <p className="text-slate-600 text-sm">Mapeo geográfico</p>
-                    <div className=" flex items-center text-xs text-slate-500">
+                    <h3 className="text-lg font-semibold text-slate-900 mt-4">Ubicación</h3>
+                    <p className="text-slate-600 text-sm mt-2">Mapeo geográfico</p>
+                    <div className="flex items-center text-xs text-slate-500 mt-4">
                       <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                       Sincronizado
                     </div>

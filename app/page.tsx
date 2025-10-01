@@ -1,5 +1,5 @@
 "use client"
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
   Droplets,
@@ -16,7 +16,8 @@ import {
   Eye,
   Activity,
   Layers,
-  Clock
+  Clock,
+  Image
 } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -26,8 +27,12 @@ import { HeroImage } from '../components/hero-image'
 import MapComponent from '@/components/MapComponent';
 import PhotoAnalyzer from '@/components/PhotoAnalyzer'
 
-
 const HomePage: React.FC = () => {
+  const photoAnalyzerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<HTMLDivElement>(null)
+  const toolsRef = useRef<HTMLDivElement>(null)
+  const updatesRef = useRef<HTMLDivElement>(null)
+
   const fadeInUp = {
     initial: { opacity: 0, y: 40 },
     animate: { opacity: 1, y: 0 },
@@ -42,15 +47,139 @@ const HomePage: React.FC = () => {
     }
   }
 
+  // Función para manejar la navegación por hash
+  const handleNavigation = (section: string) => {
+    switch (section) {
+      case 'photo-analyzer':
+        window.location.href = '/#photo-analyzer'
+        break
+      case 'map':
+        window.location.href = '/#map'
+        break
+      case 'tools':
+        window.location.href = '/#tools'
+        break
+      case 'updates':
+        window.location.href = '/#updates'
+        break
+      default:
+        break
+    }
+  }
+
+  useEffect(() => {
+    // Manejar la navegación por hash
+    const handleHashChange = () => {
+      const hash = window.location.hash
+      
+      setTimeout(() => {
+        switch (hash) {
+          case '#photo-analyzer':
+            photoAnalyzerRef.current?.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            })
+            break
+          case '#map':
+            mapRef.current?.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            })
+            break
+          case '#tools':
+            toolsRef.current?.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            })
+            break
+          case '#updates':
+            updatesRef.current?.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            })
+            break
+          default:
+            break
+        }
+      }, 100)
+    }
+
+    // Ejecutar al cargar la página si hay hash
+    handleHashChange()
+
+    // Escuchar cambios en el hash
+    window.addEventListener('hashchange', handleHashChange)
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <Header />
 
       {/* Hero Section */}
-
       <HeroImage />
+      
+      {/* Map Section */}
+      <section 
+        id="map" 
+        ref={mapRef}
+        className="py-20 bg-white border-b border-gray-200"
+      >
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl font-light text-red-800 mb-4 uppercase tracking-wide">
+              Mapa de Monitoreo
+            </h2>
+            <div className="w-20 h-1 bg-red-800 mx-auto mb-6"></div>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+              Visualización geográfica de cuerpos de agua y puntos de monitoreo en tiempo real
+            </p>
+          </motion.div>
+          <MapComponent />
+        </div>
+      </section>
+
+      {/* Photo Analyzer Section */}
+      <section 
+        id="photo-analyzer" 
+        ref={photoAnalyzerRef}
+        className="py-20 bg-gray-50 border-b border-gray-200"
+      >
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl font-light text-red-800 mb-4 uppercase tracking-wide">
+              Análisis de Imágenes
+            </h2>
+            <div className="w-20 h-1 bg-red-800 mx-auto mb-6"></div>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+              Sube y analiza imágenes para detectar y cuantificar áreas de agua mediante inteligencia artificial
+            </p>
+          </motion.div>
+          <PhotoAnalyzer />
+        </div>
+      </section>
+
       {/* HERRAMIENTAS ESPECIALIZADAS Section */}
-      <section className="py-24 bg-white border-b border-t border-b-gray-200 backdrop-blur-sm">
+      <section 
+        id="tools" 
+        ref={toolsRef}
+        className="py-24 bg-white border-b border-gray-200 backdrop-blur-sm"
+      >
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             className="mb-16"
@@ -82,6 +211,7 @@ const HomePage: React.FC = () => {
                 description: "Análisis temporal completo",
                 stats: ["1,247 imágenes", "2.4M registros", "5 años de datos"],
                 gradient: "from-red-700 to-red-800",
+                section: "tools"
               },
               {
                 icon: Activity,
@@ -89,24 +219,22 @@ const HomePage: React.FC = () => {
                 description: "Modelos de IA avanzados",
                 stats: ["94.2% precisión", "Alertas tempranas", "ML optimizado"],
                 gradient: "from-red-600 to-red-700",
+                section: "tools"
               },
               {
-                icon: Layers,
-                title: "Análisis",
-                description: "Visualización inteligente",
-                stats: ["Tiempo real", "Comparativas", "Dashboards"],
+                icon: Image,
+                title: "Análisis de Imágenes",
+                description: "Detección automática de agua",
+                stats: ["Procesamiento IA", "Resultados en segundos", "Múltiples formatos"],
                 gradient: "from-red-800 to-red-900",
+                section: "photo-analyzer"
               },
-              // {
-              //   icon: Globe,
-              //   title: "Monitoreo",
-              //   description: "Seguimiento continuo",
-              //   stats: ["24 estaciones", "Update 1min", "Cobertura total"],
-              //   gradient: "from-red-700 to-red-800",
-              // },
             ].map((feature, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <Card className="p-4 h-full group cursor-pointer transition-all duration-300 bg-gray-50 border-0 shadow-sm">
+                <Card 
+                  className="p-4 h-full group cursor-pointer transition-all duration-300 bg-gray-50 border-0 shadow-sm hover:shadow-lg hover:border-red-200"
+                  onClick={() => handleNavigation(feature.section)}
+                >
                   <div
                     className={`w-12 h-12 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
                   >
@@ -138,11 +266,13 @@ const HomePage: React.FC = () => {
           </motion.div>
         </div>
       </section>
-      {/* <MapComponent /> */}
-      <PhotoAnalyzer />
 
       {/* Updates Section */}
-      <section className="py-24 bg-gradient-to-br from-slate-50 to-white">
+      <section 
+        id="updates" 
+        ref={updatesRef}
+        className="py-24 bg-gradient-to-br from-slate-50 to-white"
+      >
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             className="text-center mb-20"
@@ -167,7 +297,7 @@ const HomePage: React.FC = () => {
             viewport={{ once: true }}
           >
             <motion.div variants={fadeInUp}>
-              <Card className="p-10 h-full">
+              <Card className="p-10 h-full hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-blue-500/20">
                   <Shield className="w-10 h-10 text-white" />
                 </div>
@@ -203,27 +333,39 @@ const HomePage: React.FC = () => {
                   title: "Sistema de Alertas Implementado",
                   description: "Notificaciones automáticas para cambios críticos",
                   time: "Hace 1 semana",
-                  color: "yellow"
+                  color: "yellow",
+                  bgColor: "bg-yellow-50",
+                  textColor: "text-yellow-600",
+                  borderColor: "border-yellow-200"
                 },
                 {
                   icon: Camera,
                   title: "Galería Fotográfica Actualizada",
                   description: "Nuevas imágenes de alta resolución",
                   time: "Hace 2 semanas",
-                  color: "green"
+                  color: "green",
+                  bgColor: "bg-green-50",
+                  textColor: "text-green-600",
+                  borderColor: "border-green-200"
                 },
                 {
                   icon: TrendingUp,
                   title: "Modelos Predictivos Mejorados",
                   description: "Algoritmos IA con 94.2% de precisión",
                   time: "Hace 3 semanas",
-                  color: "purple"
+                  color: "purple",
+                  bgColor: "bg-purple-50",
+                  textColor: "text-purple-600",
+                  borderColor: "border-purple-200"
                 }
               ].map((update, index) => (
-                <Card key={index} className="p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+                <Card 
+                  key={index} 
+                  className="p-6 hover:shadow-lg transition-shadow cursor-pointer group border-0"
+                >
                   <div className="flex gap-6">
-                    <div className={`w-14 h-14 bg-gradient-to-br from-${update.color}-50 to-${update.color}-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300`}>
-                      <update.icon className={`w-6 h-6 text-${update.color}-600`} />
+                    <div className={`w-14 h-14 ${update.bgColor} rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300 border ${update.borderColor}`}>
+                      <update.icon className={`w-6 h-6 ${update.textColor}`} />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-slate-900 mb-2">{update.title}</h4>
@@ -244,8 +386,6 @@ const HomePage: React.FC = () => {
           </motion.div>
         </div>
       </section>
-
-
 
       <Footer />
     </div>
