@@ -119,9 +119,10 @@ const PhotoAnalyzer = () => {
     setIsModalOpen(true)
   }, [])
 
-  // Lógica para cerrar el modal - CORREGIDA
+  // Lógica para cerrar el modal
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false)
+    setTimeout(() => setSelectedImageResult(null), 300)
   }, [])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -694,7 +695,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, remoteBaseUrl
 }
 
 // ------------------------------ //
-// COMPONENTE MODAL DE DETALLE - CORREGIDO //
+// COMPONENTE MODAL DE DETALLE //
 // ------------------------------ //
 
 interface ImageDetailModalProps {
@@ -703,43 +704,23 @@ interface ImageDetailModalProps {
   result: ImageResult | null
   remoteBaseUrl: string
 }
+
 const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, result, remoteBaseUrl }) => {
-  // 1. PRIMERO TODOS LOS HOOKS - SIEMPRE SE EJECUTAN
+  if (!isOpen || !result) return null
+
+  const BASE_URL = remoteBaseUrl.endsWith('/') ? remoteBaseUrl.slice(0, -1) : remoteBaseUrl
+  const imageUrl = `${BASE_URL}${result.image}`
+  
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
-      document.documentElement.style.overflow = 'unset'
     }
-
     return () => {
       document.body.style.overflow = 'unset'
-      document.documentElement.style.overflow = 'unset'
     }
   }, [isOpen])
-
-  // Manejar el cierre con Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isOpen, onClose])
-
-  // 2. LUEGO LAS CONDICIONES - DESPUÉS DE TODOS LOS HOOKS
-  if (!isOpen || !result) return null
-
-  // 3. FINALMENTE EL RESTO DEL CÓDIGO
-  const BASE_URL = remoteBaseUrl.endsWith('/') ? remoteBaseUrl.slice(0, -1) : remoteBaseUrl
-  const imageUrl = `${BASE_URL}${result.image}`
 
   return (
     <div
@@ -816,4 +797,5 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, re
     </div>
   )
 }
+
 export default PhotoAnalyzer

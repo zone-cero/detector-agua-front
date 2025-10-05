@@ -122,37 +122,12 @@ const HomePage: React.FC = () => {
       {/* Hero Section */}
       <HeroImage />
       
-      {/* Map Section */}
-      <section 
-        id="map" 
-        ref={mapRef}
-        className="py-20 bg-white border-b border-gray-200"
-      >
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl font-light text-red-800 mb-4 uppercase tracking-wide">
-              Mapa de Monitoreo
-            </h2>
-            <div className="w-20 h-1 bg-red-800 mx-auto mb-6"></div>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Visualización geográfica de cuerpos de agua y puntos de monitoreo en tiempo real
-            </p>
-          </motion.div>
-          <MapComponent />
-        </div>
-      </section>
-
+     
       {/* Photo Analyzer Section */}
       <section 
         id="photo-analyzer" 
         ref={photoAnalyzerRef}
-        className="py-20 bg-gray-50 border-b border-gray-200"
+        className="py-20 bg-[#d0d0d0] border border-[#bc955b] "
       >
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
