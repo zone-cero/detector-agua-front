@@ -35,11 +35,13 @@ export function Header() {
     <>
       <header
         className={`w-full fixed top-0 z-50 transition-all duration-500 ease-in-out ${
-          isScrolled ? "bg-white/95 backdrop-blur-md border-b border-gray-200" : "bg-white "
+          isScrolled
+        ? "bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg"
+        : "bg-white"
         } ${isVisible ? "transform translate-y-0" : "transform -translate-y-full"}`}
       >
-        <div className="bg-white border-b border-gray-100">
-          <div className="container mx-auto px-6 py-4">
+        <div className="bg-white border-b border-gray-50">
+          <div className="container mx-auto px-33 py-4">
             <div className="flex items-center justify-between">
               {/* Logo */}
               <Link href="/" className="flex items-center space-x-4 group transition-all duration-500 hover:scale-105">
@@ -47,8 +49,8 @@ export function Header() {
                   <Image
                     src="/imagenes/Logo_gob_hidalgo.svg"
                     alt="Logo"
-                    width={200}
-                    height={40}
+                    width={300}
+                    height={50}
                     className="transition-all duration-500"
                   />
                 </div>

@@ -36,7 +36,7 @@ export function HeroImage() {
   }
 
   return (
-    <section ref={ref} className="pt-20 pb-24 px-6 relative overflow-hidden">
+    <section ref={ref} className="pt-20 pb-0 px-6 relative overflow-hidden">
       {/* Background Elements con Paralaje */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-slate-50/30"
@@ -61,42 +61,74 @@ export function HeroImage() {
           {/* Columna Izquierda - Título y contenido */}
           <motion.div className="space-y-6 max-w-4xl" variants={fadeInUp}>
             <div className="space-y-3">
+              <div className="absolute left-32 top-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-"></div>
               <h1 className="text-7xl lg:text-6xl font-light text-slate-900 leading-tight relative">
                 {/* Gradiente de fondo con blur */}
-                <div className="absolute left-32 top-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-xl"></div>
 
-                <span className="block font-semibold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent relative z-10">
+                <span className="block font-semibold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent relative z-1">
                   Sistema de Gestión
                 </span>
-                <span className="block font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent relative z-10">
+                <span className="block font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent relative z-1">
                   de Áreas Naturales
                 </span>
-                <span className="block font-light text-slate-600 relative z-10">
+                <span className="block font-light text-slate-600 relative z-1">
                   Protegidas
                 </span>
               </h1>
 
-              <p className="text-lg lg:text-xl text-slate-600 leading-relaxed max-w-xl">
+              <p className="text-lg lg:text-xl text-slate-600 leading-relaxed max-w-xl z-10">
                 Plataforma avanzada que combina análisis predictivo, visualización de datos y monitoreo continuo para la gestión inteligente de recursos hídricos.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-5">
-              <Button 
-                className="bg-gray-500 hover:bg-gray-600 text-white border-0 hover:border" 
-                style={{ borderColor: '#D4B483' }}
+              {/* ======================================
+    1. Botón "Explorar Datos" (Gris) - Fondo fijo transparente
+    ======================================
+  */}
+              <Button
+                // CLASES BASE: Fondo transparente, borde y texto gris.
+                className="bg-transparent text-gray-600 border border-gray-600 
+               transition ease-in-out duration-300 hover:bg-transparent"
                 size="lg"
-                onClick={handleRedirectToAnalyzer} // Redirige al Analizador
+                onClick={handleRedirectToAnalyzer}
+
+                // Efecto de sombra/borde grueso solo en la parte inferior al hacer hover.
+                onMouseEnter={e => {
+                  e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(75, 85, 99)'; // Gris-600
+                  e.currentTarget.style.transform = 'translateY(-3px)'; // Mueve el botón hacia arriba
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
                 <Eye className="w-5 h-5 mr-2" />
                 Explorar Datos
               </Button>
-              <Button 
-                variant="secondary" 
+
+              {/* ======================================
+    2. Botón "Ver Demostración" (Rojo/Vinotinto) - Fondo fijo transparente
+    ======================================
+  */}
+              <Button
+                // CLASES BASE: Fondo transparente, borde y texto rojo.
+                // **Ajuste:** Agregamos `hover:bg-transparent` si la variante "secondary" tiene un hover:bg-* por defecto.
+                className="bg-transparent text-red-700 border border-red-700 
+               transition ease-in-out duration-300 hover:bg-transparent"
+                variant="secondary"
                 size="lg"
-                className="border border-gray-300 hover:border"
-                style={{ borderColor: '#D4B483' }}
-                onClick={handleRedirectToAnalyzer} // ¡Ver Demostración ahora redirige aquí!
+                onClick={handleRedirectToAnalyzer}
+
+                // Efecto de sombra/borde grueso solo en la parte inferior al hacer hover.
+                onMouseEnter={e => {
+                  e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(185, 28, 28)'; // Rojo-700
+                  e.currentTarget.style.transform = 'translateY(-3px)'; // Mueve el botón hacia arriba
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
                 Ver Demostración
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -116,13 +148,13 @@ export function HeroImage() {
                 y: yMap, // Aplicar paralaje
               }}
             >
-                <img
-                    src="/imagenes/Blank_map_of_Hidalgo_1_.png"
-                    alt="Mapa de Hidalgo"
-                    className="w-full h-auto object-cover opacity-90"
-                />
+              <img
+                src="/imagenes/Blank_map_of_Hidalgo_1_.png"
+                alt="Mapa de Hidalgo"
+                className="w-full h-auto object-cover opacity-100"
+              />
             </motion.div>
-            
+
             {/* Se eliminó todo el bloque de las tarjetas y el grid de la derecha */}
 
           </motion.div>

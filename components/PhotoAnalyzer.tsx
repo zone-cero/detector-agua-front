@@ -1,13 +1,30 @@
-"use client"
+"use client" // 🚨 MODIFICACIÓN REALIZADA AQUÍ
 
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+import { Card } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  Upload,
+  X,
+  ChevronRight,
+  ChevronLeft,
+  Check,
+  Droplets,
+  Leaf,
+  Calendar,
+  FileText,
+  Sparkles,
+  ZoomIn,
+  Ruler, // Asumiendo que Ruler se usa en ImageDetailModal
+} from "lucide-react"
 
+const REMOTE_BASE_URL = "http://72.60.127.75"
+
+console.log("url:", REMOTE_BASE_URL)
 // ------------------------------ //
 // INTERFACES Y TIPOS //
 // ------------------------------ //
@@ -20,6 +37,8 @@ interface ImageResult {
   water_area_m2: number
   vegetation_percentage: number
   vegetation_area_m2: number
+  // Añadido para un resultado completo si lo necesitas
+  capture_date?: string
 }
 
 interface UploadResponse {
@@ -33,64 +52,79 @@ interface FilterValues {
   brightness: number
   contrast: number
   saturate: number
-  sepia: number
-  hueRotate: number
-  opacity: number
 }
 
-type TabType = "config" | "results"
+type StepType = "upload" | "configure" | "analyze" | "results"
 
 // ------------------------------ //
 // COMPONENTE PRINCIPAL //
 // ------------------------------ //
 
 const PhotoAnalyzer = () => {
+  const [currentStep, setCurrentStep] = useState<StepType>("upload")
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<UploadResponse | null>(null)
-  const [activeTab, setActiveTab] = useState<TabType>("config")
+  const [isDragging, setIsDragging] = useState(false)
 
   const [ecosystemName, setEcosystemName] = useState<string>("")
   const [ecosystemId, setEcosystemId] = useState<string | null>(null)
   const [descriptions, setDescriptions] = useState<string[]>([])
+  const [captureDates, setCaptureDates] = useState<string[]>([])
 
   const [filterValues, setFilterValues] = useState<FilterValues>({
     brightness: 100,
     contrast: 100,
     saturate: 100,
-    sepia: 0,
-    hueRotate: 0,
-    opacity: 100,
   })
 
-  // Estados del modal
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedImageResult, setSelectedImageResult] = useState<ImageResult | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const REMOTE_BASE_URL = "http://72.60.127.75"
 
   // ------------------------------ //
   // EFECTOS Y UTILIDADES //
   // ------------------------------ //
 
+  /**
+   * 💡 FUNCIÓN MODIFICADA: Ahora solo genera el formato 'AAAA-MM-DD'
+   * (para usar con input type="date").
+   */
+  const getNowDatetimeLocal = () => {
+    const now = new Date()
+    // Ajusta la zona horaria para obtener la hora local
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    // Genera 'AAAA-MM-DD'
+    return now.toISOString().slice(0, 10)
+  }
+
   useEffect(() => {
     imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url))
-
     const urls = selectedFiles.map((file) => URL.createObjectURL(file))
     setImagePreviewUrls(urls)
-    setAnalysisResult(null)
 
+    // Sincronización de descripciones
     if (selectedFiles.length !== descriptions.length) {
-      if (selectedFiles.length > descriptions.length) {
-        setDescriptions((prev) => [
-          ...prev,
-          ...Array(selectedFiles.length - prev.length).fill(""),
-        ])
+      const diff = selectedFiles.length - descriptions.length;
+      setDescriptions((prev) =>
+        diff > 0
+          ? [...prev, ...Array(diff).fill("")]
+          : prev.slice(0, selectedFiles.length)
+      );
+    }
+
+    // 🚀 CORRECCIÓN CLAVE: Inicialización con fecha y HORA para el input datetime-local
+    if (selectedFiles.length !== captureDates.length) {
+      const diff = selectedFiles.length - captureDates.length;
+      if (diff > 0) {
+        // Usamos la función auxiliar para obtener el formato AAAA-MM-DDTHH:MM
+        const nowString = getNowDatetimeLocal()
+        setCaptureDates((prev) => [...prev, ...Array(diff).fill(nowString)])
       } else {
-        setDescriptions((prev) => prev.slice(0, selectedFiles.length))
+        setCaptureDates((prev) => prev.slice(0, selectedFiles.length))
       }
     }
 
@@ -99,85 +133,123 @@ const PhotoAnalyzer = () => {
     }
   }, [selectedFiles])
 
-  // Cambiar a tab de resultados cuando hay resultados
-  useEffect(() => {
-    if (analysisResult) {
-      setActiveTab("results")
-    }
-  }, [analysisResult])
-
   const getImageFilterStyle = useCallback(() => {
-    const { brightness, contrast, saturate, sepia, hueRotate, opacity } = filterValues
+    const { brightness, contrast, saturate } = filterValues
     return {
-      filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturate}%) sepia(${sepia}%) hue-rotate(${hueRotate}deg) opacity(${opacity}%)`,
+      filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturate}%)`,
     }
   }, [filterValues])
 
-  // Lógica para abrir el modal
-  const handleOpenModal = useCallback((result: ImageResult) => {
-    setSelectedImageResult(result)
-    setIsModalOpen(true)
-  }, [])
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+        const newFiles = Array.from(e.target.files)
+        setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles])
+        if (currentStep === "upload") {
+          setCurrentStep("configure")
+        }
+      }
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    },
+    [currentStep],
+  )
 
-  // Lógica para cerrar el modal - CORREGIDA
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false)
-  }, [])
-
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files)
-      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles])
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
-  }, [])
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const newFiles = Array.from(e.dataTransfer.files)
+        setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles])
+        if (currentStep === "upload") {
+          setCurrentStep("configure")
+        }
+      }
+    },
+    [currentStep],
+  )
 
   const handleRemoveFile = useCallback((indexToRemove: number) => {
     setSelectedFiles((prevFiles) => prevFiles.filter((_, index) => index !== indexToRemove))
     setDescriptions((prevDesc) => prevDesc.filter((_, index) => index !== indexToRemove))
+    setCaptureDates((prevDates) => prevDates.filter((_, index) => index !== indexToRemove))
+  }, [])
+
+  const handleDescriptionChange = useCallback((index: number, description: string) => {
+    setDescriptions((prev) => prev.map((item, i) => (i === index ? description : item)))
+  }, [])
+
+  const handleDateChange = useCallback((index: number, date: string) => {
+    setCaptureDates((prev) => prev.map((item, i) => (i === index ? date : item)))
   }, [])
 
   const handleReset = useCallback(() => {
     setSelectedFiles([])
     setAnalysisResult(null)
     setDescriptions([])
+    setCaptureDates([])
     setEcosystemName("")
     setEcosystemId(null)
-    setActiveTab("config")
+    setCurrentStep("upload")
     setFilterValues({
       brightness: 100,
       contrast: 100,
       saturate: 100,
-      sepia: 0,
-      hueRotate: 0,
-      opacity: 100,
     })
   }, [])
 
-  const handleAnalyze = async () => {
+  const validateForm = () => {
     if (selectedFiles.length === 0) {
-      toast({
-        title: "¡Atención!",
-        description: "Por favor, selecciona al menos una imagen para subir y analizar.",
-        variant: "destructive",
-      })
-      return
+      return "Por favor, selecciona al menos una imagen para analizar."
     }
-
     if (!ecosystemName.trim()) {
+      return "El nombre del cuerpo de agua es requerido."
+    }
+    const missingDates = captureDates.some((date) => !date)
+    if (missingDates) {
+      return "Todas las imágenes deben tener una fecha de captura."
+    }
+    return null
+  }
+
+  
+ /**
+ * 💡 FUNCIÓN MODIFICADA: Normaliza la entrada para retornar SOLO la fecha (YYYY-MM-DD).
+ */
+const normalizeDateForAPI = (dateString: string): string => {
+    if (!dateString) return "";
+    
+    // Si contiene la 'T' (hora), extrae solo la fecha.
+    if (dateString.includes("T")) {
+        return dateString.split("T")[0]; 
+    }
+    
+    // De lo contrario, retorna el string de fecha (ej: '2025-10-03')
+    return dateString;
+};
+
+  // ----------------------------------------------------
+  // 🎯 FUNCIÓN PRINCIPAL: Maneja el proceso de análisis y envío de datos.
+  // ----------------------------------------------------
+  const handleAnalyze = async () => {
+    // 1. VALIDACIÓN
+    const validationError = validateForm()
+    if (validationError) {
       toast({
-        title: "¡Atención!",
-        description: "El nombre del cuerpo de agua es requerido.",
+        title: "Atención",
+        description: validationError,
         variant: "destructive",
       })
       return
     }
 
     setLoading(true)
+    setCurrentStep("analyze")
 
     try {
+      // 2. CONSTRUCCIÓN DEL FORMDATA y NORMALIZACIÓN DE DATOS
       const formData = new FormData()
 
       formData.append("ecosystem_name", ecosystemName.trim())
@@ -185,26 +257,84 @@ const PhotoAnalyzer = () => {
         formData.append("ecosystem_id", ecosystemId.trim())
       }
 
+      // ✅ IMÁGENES: Usando el nombre simple 'images'.
       selectedFiles.forEach((file) => {
-        formData.append("images", file)
-      })
+        formData.append("images", file);
+      });
 
-      if (descriptions.some(desc => desc.trim() !== "")) {
-        formData.append("descriptions", JSON.stringify(descriptions.slice(0, selectedFiles.length).map(desc => desc || "")))
+      // 🚀 SOLUCIÓN CLAVE: Usamos 'campo[]' para forzar la codificación como lista en FormData
+
+      // ✅ FECHAS (Aquí se construye el array en el FormData)
+      captureDates.forEach((date) => {
+        const normalizedDate = normalizeDateForAPI(date); // Llama a la función de normalización
+        formData.append("capture_dates[]", normalizedDate || "");
+      });
+
+      // ... (código dentro de handleAnalyze antes de la solicitud fetch)
+
+      // ✅ DESCRIPCIONES
+      descriptions.forEach((desc) => {
+        formData.append("descriptions[]", desc || "");
+      });
+
+      // ----------------------------------------------------
+      // 💡 MODIFICACIÓN: Mostrar el contenido del FormData como JSON-like
+      // ----------------------------------------------------
+      console.log("Datos enviados en FormData (Representación):");
+      const formDataObject: { [key: string]: any } = {};
+
+      for (const [key, value] of formData.entries()) {
+        // Si el valor es un archivo, solo mostramos el nombre y tipo
+        if (value instanceof File) {
+          const fileInfo = {
+            name: value.name,
+            size: `${(value.size / 1024 / 1024).toFixed(2)} MB`,
+            type: value.type
+          };
+          // Manejo de arrays (como images[], capture_dates[], descriptions[])
+          if (key.endsWith("[]")) {
+            const baseKey = key.slice(0, -2);
+            if (!formDataObject[baseKey]) {
+              formDataObject[baseKey] = [];
+            }
+            formDataObject[baseKey].push(fileInfo);
+          } else {
+            formDataObject[key] = fileInfo;
+          }
+        } else {
+          // Manejo de arrays (para texto/fechas)
+          if (key.endsWith("[]")) {
+            const baseKey = key.slice(0, -2);
+            if (!formDataObject[baseKey]) {
+              formDataObject[baseKey] = [];
+            }
+            formDataObject[baseKey].push(value);
+          } else {
+            formDataObject[key] = value;
+          }
+        }
       }
 
+      // Imprimir el objeto como JSON para una visualización clara
+      console.log(JSON.stringify(formDataObject, null, 2));
+      // ----------------------------------------------------
+      // ----------------------------------------------------
+
+      // 3. ENVÍO DE LA SOLICITUD
       const response = await fetch(`${REMOTE_BASE_URL}/api/monitoring/images/upload-multiple/`, {
         method: "POST",
         body: formData,
       })
 
+      // 4. MANEJO DE RESPUESTAS NO OK (4xx, 5xx)
       if (!response.ok) {
         const responseBody = await response.text()
         let errorMessage = `Error del servidor: ${response.status} ${response.statusText}`
 
         try {
           const errorData = JSON.parse(responseBody)
-          errorMessage = errorData.detail || errorData.message || responseBody || errorMessage
+          // Intenta obtener el error más específico
+          errorMessage = errorData.error || errorData.detail || errorData.capture_dates?.[0] || errorData.message || responseBody || errorMessage
         } catch (parseError) {
           if (responseBody) errorMessage = responseBody
         }
@@ -212,173 +342,261 @@ const PhotoAnalyzer = () => {
         throw new Error(errorMessage)
       }
 
+      // 5. MANEJO DE RESPUESTA EXITOSA
       const result: UploadResponse = await response.json()
       setAnalysisResult(result)
-
-      console.log("RESPUESTA COMPLETA DE LA API:", result)
+      setCurrentStep("results")
 
       toast({
-        title: "Subida y Análisis Completado",
-        description: result.message || "Las imágenes se subieron y analizaron con éxito.",
+        title: "Análisis Completado",
+        description: result.message || "Las imágenes se analizaron con éxito.",
         variant: "default",
       })
-
     } catch (error) {
-      console.error("ERROR al subir y analizar las imágenes:", error)
-
-      let errorMessage = "Hubo un problema al conectar con el servidor. Inténtalo de nuevo."
+      // 6. MANEJO DE ERRORES DE RED O ERRORES LANZADOS
+      let errorMessage = "Ocurrió un error inesperado."
 
       if (error instanceof Error) {
         if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
-          errorMessage = "No se pudo conectar con el servidor. Verifica la URL remota y la conexión."
+          errorMessage = "No se pudo conectar con el servidor. Verifica la conexión."
         } else {
           errorMessage = error.message
         }
       }
 
+      console.error("ERROR al analizar las imágenes:", errorMessage)
+
       toast({
-        title: "Error de Subida/Análisis",
+        title: "Error de Análisis",
         description: errorMessage,
         variant: "destructive",
       })
+
+      setCurrentStep("configure")
     } finally {
       setLoading(false)
     }
   }
 
-  const isControlsDisabled = selectedFiles.length === 0 || loading
-  const filterKeys = Object.keys(filterValues) as Array<keyof FilterValues>
+  const handleOpenModal = useCallback((result: ImageResult) => {
+    setSelectedImageResult(result)
+    setIsModalOpen(true)
+  }, [])
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false)
+  }, [])
 
   // ------------------------------ //
   // RENDERIZADO //
   // ------------------------------ //
 
-  return (
-    <div className="flex justify-center py-12 md:py-16 px-4 min-h-screen">
-      <div className="w-full max-w-7xl">
-        <div className="grid lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1fr] gap-8 md:gap-12">
-          {/* Sección de Carga y Previsualización */}
-          <div className="flex flex-col gap-6">
-            {/* Campo para Ecosystem Name/ID */}
-            <div className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
-                Información del Sitio
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="ecosystem-name" className="text-sm font-medium text-gray-700">
-                    Nombre del Cuerpo de Agua <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="ecosystem-name"
-                    value={ecosystemName}
-                    onChange={(e) => setEcosystemName(e.target.value)}
-                    placeholder="Ej: Laguna de Términos"
-                    className="mt-1 border-gray-300 focus:border-gray-500"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </div>
+  // Nota: Faltan las definiciones de ImageDetailModal, UploadStep, ConfigureStep, AnalyzeStep y ResultsStep 
+  // para que el código compile y se muestre, pero asumo que existen en otro archivo.
 
-            {/* Área de carga / Previsualizaciones */}
-            {selectedFiles.length === 0 ? (
-              <FileUploadArea
+  const steps = [
+    { id: "upload", label: "Subir", icon: Upload },
+    { id: "configure", label: "Configurar", icon: FileText },
+    { id: "analyze", label: "Analizar", icon: Sparkles },
+    { id: "results", label: "Resultados", icon: Check },
+  ]
+
+  const currentStepIndex = steps.findIndex((s) => s.id === currentStep)
+
+  return (
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h2 className="text-[32px] font-normal text-slate-900 mb-2">Análisis de Imágenes</h2>
+          <p className="text-[16px] text-slate-600">
+            Detecta y cuantifica áreas de agua y vegetación con inteligencia artificial
+          </p>
+        </div>
+
+        {/* Stepper */}
+        <Card className="mb-8 p-6 border-0 shadow-sm bg-white">
+          <div className="flex items-center justify-between">
+            {steps.map((step, index) => {
+              const Icon = step.icon
+              const isActive = currentStepIndex === index
+              const isCompleted = currentStepIndex > index
+              const isDisabled = currentStepIndex < index
+
+              return (
+                <div key={step.id} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
+                        ? "bg-blue-600 text-white"
+                        : isActive
+                          ? "bg-blue-100 text-blue-600 ring-4 ring-blue-100"
+                          : "bg-slate-100 text-slate-400"
+                        }`}
+                    >
+                      {isCompleted ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                    </div>
+                    <span
+                      className={`mt-2 text-[13px] font-medium ${isActive ? "text-slate-900" : isCompleted ? "text-blue-600" : "text-slate-400"
+                        }`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div
+                      className={`h-0.5 flex-1 mx-4 transition-all duration-300 ${isCompleted ? "bg-blue-600" : "bg-slate-200"
+                        }`}
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+
+        {/* Content Area */}
+        <div className="grid lg:grid-cols-[1fr_400px] gap-6">
+          {/* Main Content */}
+          <div>
+            {currentStep === "upload" && (
+              <UploadStep
+                isDragging={isDragging}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setIsDragging(true)
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
                 onAreaClick={() => fileInputRef.current?.click()}
                 fileInputRef={fileInputRef}
                 onFileChange={handleFileChange}
               />
-            ) : (
-              <div className="flex flex-col gap-4 p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
-                <h3 className="text-xl font-bold text-gray-800">
-                  Imágenes a Analizar ({selectedFiles.length})
-                </h3>
-                <ImagePreviews
-                  imagePreviewUrls={imagePreviewUrls}
-                  getImageFilterStyle={getImageFilterStyle}
-                  onRemoveFile={handleRemoveFile}
-                  descriptions={descriptions}
-                  onDescriptionChange={(index: number, desc: string) => {
-                    setDescriptions((prev) =>
-                      prev.map((item, i) => i === index ? desc : item)
-                    )
-                  }}
-                />
-                <FileControls 
-                  onAddMore={() => fileInputRef.current?.click()} 
-                  onReset={handleReset}
-                  fileInputRef={fileInputRef}
-                  onFileChange={handleFileChange}
-                />
-              </div>
+            )}
+
+            {currentStep === "configure" && (
+              <ConfigureStep
+                selectedFiles={selectedFiles}
+                imagePreviewUrls={imagePreviewUrls}
+                getImageFilterStyle={getImageFilterStyle}
+                onRemoveFile={handleRemoveFile}
+                descriptions={descriptions}
+                captureDates={captureDates}
+                onDescriptionChange={handleDescriptionChange}
+                onDateChange={handleDateChange}
+                ecosystemName={ecosystemName}
+                setEcosystemName={setEcosystemName}
+                ecosystemId={ecosystemId}
+                setEcosystemId={setEcosystemId}
+                onAddMore={() => fileInputRef.current?.click()}
+                fileInputRef={fileInputRef}
+                onFileChange={handleFileChange}
+              />
+            )}
+
+            {currentStep === "analyze" && <AnalyzeStep loading={loading} />}
+
+            {currentStep === "results" && analysisResult && (
+              <ResultsStep result={analysisResult} remoteBaseUrl={REMOTE_BASE_URL} onOpenModal={handleOpenModal} />
             )}
           </div>
 
-          {/* Sección de Controles y Resultados con Tabs */}
-          <div className="flex flex-col gap-4">
-            {/* Navegación de Tabs */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-              <div className="flex border-b border-gray-200">
-                <button
-                  onClick={() => setActiveTab("config")}
-                  className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === "config"
-                      ? "border-gray-800 text-gray-800 bg-gray-50"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="font-semibold">Configuración</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("results")}
-                  disabled={!analysisResult}
-                  className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-                    !analysisResult
-                      ? "text-gray-400 cursor-not-allowed border-transparent"
-                      : activeTab === "results"
-                        ? "border-gray-800 text-gray-800 bg-gray-50"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="font-semibold">Resultados</span>
-                  {analysisResult && (
-                    <span className="bg-gray-800 text-white text-xs rounded-full h-5 w-5 ml-2 inline-flex items-center justify-center">
-                      {analysisResult.images.length}
-                    </span>
-                  )}
-                </button>
-              </div>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {currentStep === "configure" && (
+              <Card className="p-6 border-0 shadow-sm bg-white">
+                <h3 className="text-[18px] font-medium text-slate-900 mb-4">Ajustes de Vista Previa</h3>
+                <p className="text-[13px] text-slate-600 mb-6">
+                  Estos ajustes solo afectan la vista previa, no el análisis final
+                </p>
+                <div className="space-y-4">
+                  {(Object.keys(filterValues) as Array<keyof FilterValues>).map((key) => (
+                    <div key={key}>
+                      <div className="flex justify-between items-center mb-2">
+                        <Label className="text-[13px] font-medium text-slate-700 capitalize">
+                          {key === "brightness" ? "Brillo" : key === "contrast" ? "Contraste" : "Saturación"}
+                        </Label>
+                        <span className="text-[13px] font-medium text-slate-900">{filterValues[key]}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={200}
+                        step={5}
+                        value={filterValues[key]}
+                        onChange={(e) => setFilterValues((prev) => ({ ...prev, [key]: Number(e.target.value) }))}
+                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
 
-              {/* Contenido de los Tabs */}
-              <div className="p-1">
-                {activeTab === "config" && (
-                  <ImageControls
-                    isDisabled={isControlsDisabled}
-                    filterValues={filterValues}
-                    filterKeys={filterKeys}
-                    onSliderChange={(key: keyof FilterValues, value: number) => 
-                      setFilterValues((prev) => ({ ...prev, [key]: value }))
-                    }
-                    onAnalyze={handleAnalyze}
-                    loading={loading}
-                    hasResults={!!analysisResult}
-                    onShowResults={() => setActiveTab("results")}
-                  />
+            {/* Action Buttons */}
+            <Card className="p-6 border-0 shadow-sm bg-white">
+              <div className="space-y-3">
+                {currentStep === "configure" && (
+                  <>
+                    <Button
+                      onClick={() => handleAnalyze()}
+                      disabled={selectedFiles.length === 0}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11 text-[14px] font-medium rounded-lg shadow-sm"
+                    >
+                      Iniciar Análisis
+                    </Button>
+                    <Button
+                      onClick={() => setCurrentStep("upload")}
+                      variant="outline"
+                      className="w-full border-slate-300 text-blue-600 hover:bg-slate-50 h-11 text-[14px] font-medium rounded-lg hover:text-blue-600"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-2" />
+                      Volver
+                    </Button>
+                  </>
                 )}
 
-                {activeTab === "results" && analysisResult && (
-                  <AnalysisResults
-                    remoteBaseUrl={REMOTE_BASE_URL}
-                    result={analysisResult}
-                    onOpenModal={handleOpenModal}
-                  />
+                {currentStep === "results" && (
+                  <Button
+                    onClick={handleReset}
+                    variant="outline"
+                    className="w-full border-slate-300 text-slate-700 hover:bg-slate-50 h-11 text-[14px] font-medium rounded-lg bg-transparent"
+                  >
+                    Nuevo Análisis
+                  </Button>
+                )}
+
+                {currentStep === "upload" && selectedFiles.length > 0 && (
+                  <Button
+                    onClick={() => setCurrentStep("configure")}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11 text-[14px] font-medium rounded-lg shadow-sm"
+                  >
+                    Continuar
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
                 )}
               </div>
-            </div>
+            </Card>
+
+            {/* Info Card */}
+            {currentStep !== "results" && (
+              <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
+                <div className="flex items-start gap-3">
+
+                  <div>
+                    <h4 className="text-[14px] font-medium text-slate-900 mb-1">Análisis de imagen</h4>
+                    <p className="text-[13px] text-slate-700 leading-relaxed">
+                      Nuestro sistema utiliza IA avanzada para detectar y cuantificar áreas de agua y vegetación con
+                      alta precisión
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
           </div>
         </div>
 
-        {/* Modal de Detalle de Imagen */}
+        {/* Modal */}
         <ImageDetailModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
@@ -391,76 +609,37 @@ const PhotoAnalyzer = () => {
 }
 
 // ------------------------------ //
-// COMPONENTES SECUNDARIOS //
+// STEP COMPONENTS //
 // ------------------------------ //
 
-interface ImagePreviewsProps {
-  imagePreviewUrls: string[]
-  getImageFilterStyle: () => React.CSSProperties
-  onRemoveFile: (index: number) => void
-  descriptions: string[]
-  onDescriptionChange: (index: number, desc: string) => void
-}
-
-const ImagePreviews: React.FC<ImagePreviewsProps> = ({ 
-  imagePreviewUrls, 
-  getImageFilterStyle, 
-  onRemoveFile, 
-  descriptions, 
-  onDescriptionChange 
-}) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto p-1">
-    {imagePreviewUrls.map((url: string, index: number) => (
-      <div key={index} className="relative shadow-md rounded-lg overflow-hidden group border border-gray-200 bg-white">
-        <div className="aspect-[4/3] relative">
-          <img
-            src={url || "/placeholder.svg"}
-            alt={`Vista previa ${index + 1}`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            style={getImageFilterStyle()}
-          />
-          <Button
-            onClick={() => onRemoveFile(index)}
-            variant="ghost"
-            aria-label={`Eliminar imagen ${index + 1}`}
-            className="absolute top-2 right-2 p-1 h-8 w-auto px-2 bg-black/60 text-white rounded-md transition-all duration-300 opacity-0 group-hover:opacity-100 group-hover:bg-gray-600 z-10 text-xs font-semibold"
-          >
-            Eliminar
-          </Button>
-        </div>
-        <div className="p-3 border-t border-gray-100 bg-gray-50">
-          <Label htmlFor={`desc-${index}`} className="text-xs font-semibold text-gray-700">
-            Descripción (Opcional)
-          </Label>
-          <Input
-            id={`desc-${index}`}
-            value={descriptions[index] || ""}
-            onChange={(e) => onDescriptionChange(index, e.target.value)}
-            placeholder="Añadir nota de ubicación/estado"
-            className="mt-1 h-8 text-sm border-gray-300"
-          />
-        </div>
-      </div>
-    ))}
-  </div>
-)
-
-interface FileUploadAreaProps {
+interface UploadStepProps {
+  isDragging: boolean
+  onDragOver: (e: React.DragEvent) => void
+  onDragLeave: () => void
+  onDrop: (e: React.DragEvent) => void
   onAreaClick: () => void
   fileInputRef: React.RefObject<HTMLInputElement>
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-const FileUploadArea: React.FC<FileUploadAreaProps> = ({ onAreaClick, fileInputRef, onFileChange }) => (
-  <div
+const UploadStep: React.FC<UploadStepProps> = ({
+  isDragging,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onAreaClick,
+  fileInputRef,
+  onFileChange,
+}) => (
+  <Card
+    className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 cursor-pointer ${isDragging
+      ? "border-blue-500 bg-blue-50/50 shadow-lg scale-[1.02]"
+      : "border-slate-300 bg-white hover:border-blue-400 hover:bg-slate-50 shadow-sm"
+      }`}
+    onDragOver={onDragOver}
+    onDragLeave={onDragLeave}
+    onDrop={onDrop}
     onClick={onAreaClick}
-    className="
-      flex flex-col items-center justify-center 
-      bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 
-      transition-all duration-300 cursor-pointer hover:border-gray-400 
-      relative aspect-video min-h-[250px] p-6 shadow-sm
-      group 
-    "
   >
     <Input
       type="file"
@@ -470,231 +649,280 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({ onAreaClick, fileInputR
       accept="image/jpeg,image/png,image/webp"
       multiple
     />
-
-    <img
-      src="/imagenes/wMOtOEdSdz28gAAAABJRU5ErkJggg==.jpg"
-      alt="Imagen de carga file"
-      className="
-        max-h-32 max-w-full mb-4 object-contain 
-        transition-transform duration-300 ease-in-out
-        group-hover:translate-y-[-5px] group-hover:scale-105
-      "
-    />
-
-    <div className="text-center">
-      <p className="text-xl font-bold text-gray-700">Haz clic o arrastra aquí</p>
-      <p className="text-sm mt-1 text-gray-600">Sube fotos (.jpg, .png) para su análisis</p>
+    <div className="flex flex-col items-center">
+      <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-6 transition-transform duration-300 hover:scale-110">
+        <Upload className="w-10 h-10 text-blue-600" />
+      </div>
+      <h3 className="text-[24px] font-normal text-slate-900 mb-2">Arrastra tus imágenes aquí</h3>
+      <p className="text-[15px] text-slate-600 mb-8">o haz clic para seleccionar archivos</p>
+      <Button className="bg-blue-600 hover:bg-blue-700 text-white h-11 px-8 text-[14px] font-medium rounded-lg shadow-sm">
+        Seleccionar Imágenes
+      </Button>
+      <p className="text-[13px] text-slate-500 mt-6">Formatos: JPG, PNG, WEBP • Máximo 10MB por imagen</p>
     </div>
-  </div>
+  </Card>
 )
 
-interface FileControlsProps {
+interface ConfigureStepProps {
+  selectedFiles: File[]
+  imagePreviewUrls: string[]
+  getImageFilterStyle: () => React.CSSProperties
+  onRemoveFile: (index: number) => void
+  descriptions: string[]
+  captureDates: string[]
+  onDescriptionChange: (index: number, desc: string) => void
+  onDateChange: (index: number, date: string) => void
+  ecosystemName: string
+  setEcosystemName: (name: string) => void
+  ecosystemId: string | null
+  setEcosystemId: (id: string) => void
   onAddMore: () => void
-  onReset: () => void
   fileInputRef: React.RefObject<HTMLInputElement>
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-const FileControls: React.FC<FileControlsProps> = ({ onAddMore, onReset, fileInputRef, onFileChange }) => (
-  <div className="flex gap-4 pt-4 border-t border-gray-100">
-    <Button
-      onClick={onAddMore}
-      variant="outline"
-      className="flex-1 py-2 text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-2 bg-transparent font-semibold transition-colors"
-    >
-      Agregar más Imágenes
-    </Button>
-    <Button
-      onClick={onReset}
-      variant="outline"
-      className="py-2 flex items-center gap-2 font-semibold text-gray-700 border-gray-300 hover:bg-gray-50"
-    >
-      Vaciar todo
-    </Button>
-    <Input 
-      type="file" 
-      ref={fileInputRef} 
-      onChange={onFileChange} 
-      className="hidden" 
-      accept="image/jpeg,image/png,image/webp" 
-      multiple 
-    />
-  </div>
-)
-
-interface ImageControlsProps {
-  isDisabled: boolean
-  filterValues: FilterValues
-  filterKeys: Array<keyof FilterValues>
-  onSliderChange: (key: keyof FilterValues, value: number) => void
-  onAnalyze: () => void
-  loading: boolean
-  hasResults: boolean
-  onShowResults: () => void
-}
-
-const ImageControls: React.FC<ImageControlsProps> = ({
-  isDisabled,
-  filterValues,
-  filterKeys,
-  onSliderChange,
-  onAnalyze,
-  loading,
-  hasResults,
-  onShowResults,
+const ConfigureStep: React.FC<ConfigureStepProps> = ({
+  selectedFiles,
+  imagePreviewUrls,
+  getImageFilterStyle,
+  onRemoveFile,
+  descriptions,
+  captureDates,
+  onDescriptionChange,
+  onDateChange,
+  ecosystemName,
+  setEcosystemName,
+  ecosystemId,
+  setEcosystemId,
+  onAddMore,
+  fileInputRef,
+  onFileChange,
 }) => (
-  <div className="p-4">
-    <h2 className="text-lg font-bold text-gray-800 mb-2">
-      Ajustes de Previsualización
-    </h2>
-    <p className="text-sm text-gray-500 mb-4">
-      Ajusta los filtros para una mejor vista. Esto <strong>no</strong> afecta el análisis final, solo la vista previa.
-    </p>
-    <Separator className="mb-4 bg-gray-200" />
-
-    <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-      {filterKeys.map((key: keyof FilterValues) => (
-        <div key={key}>
-          <div className="flex justify-between items-center mb-1">
-            <Label htmlFor={`slider-${key}`} className="text-xs font-normal text-gray-600 capitalize">
-              {key.replace(/([A-Z])/g, " $1").trim().replace('hue rotate', 'Rotación Tono')}
-            </Label>
-            <span className="text-xs font-medium text-gray-700">
-              {filterValues[key]}
-              {key === "hueRotate" ? "°" : "%"}
-            </span>
-          </div>
+  <div className="space-y-6">
+    {/* Ecosystem Info */}
+    <Card className="p-6 border-0 shadow-sm bg-white">
+      <h3 className="text-[20px] font-medium text-slate-900 mb-4">Información del Sitio</h3>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <Label className="text-[13px] font-medium text-slate-700 mb-2 block">
+            Nombre del Cuerpo de Agua <span className="text-red-500">*</span>
+          </Label>
           <Input
-            type="range"
-            id={`slider-${key}`}
-            min={0}
-            max={key === "hueRotate" ? 360 : 200}
-            step={key === "hueRotate" ? 1 : 5}
-            value={filterValues[key]}
-            onChange={(e) => onSliderChange(key, Number(e.target.value))}
-            disabled={isDisabled}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg accent-gray-600"
+            value={ecosystemName}
+            onChange={(e) => setEcosystemName(e.target.value)}
+            placeholder="Ej: Laguna de Términos"
+            className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
           />
         </div>
-      ))}
-    </div>
+        <div>
+          <Label className="text-[13px] font-medium text-slate-700 mb-2 block">ID del Ecosistema (Opcional)</Label>
+          <Input
+            value={ecosystemId || ""}
+            onChange={(e) => setEcosystemId(e.target.value)}
+            placeholder="Ej: 123"
+            className="h-11 border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+          />
+        </div>
+      </div>
+    </Card>
 
-    <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col gap-3">
-      <Button
-        onClick={onAnalyze}
-        disabled={isDisabled || loading}
-        className="bg-gray-800 hover:bg-gray-900 text-white rounded-lg py-2.5 text-sm shadow-sm transition-all duration-200 w-full"
-      >
-        {loading ? (
-          <span className="flex items-center justify-center gap-2 font-semibold">
-            Subiendo y Analizando...
-          </span>
-        ) : (
-          <span className="flex items-center justify-center gap-2 font-semibold">
-            Iniciar Análisis
-          </span>
-        )}
-      </Button>
-
-      {hasResults && (
+    {/* Images Grid */}
+    <Card className="p-6 border-0 shadow-sm bg-white">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[20px] font-medium text-slate-900">Imágenes Seleccionadas ({selectedFiles.length})</h3>
         <Button
-          onClick={onShowResults}
+          onClick={onAddMore}
           variant="outline"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg py-2.5 text-sm transition-all duration-200 w-full"
+          className="border-slate-300 text-slate-700 hover:bg-slate-50 h-9 px-4 text-[13px] font-medium rounded-lg bg-transparent"
         >
-          <span className="flex items-center justify-center gap-2 font-semibold">
-            Ver Resultados
-          </span>
+          <Upload className="w-4 h-4 mr-2" />
+          Agregar más
         </Button>
-      )}
-    </div>
+      </div>
+
+      <Input
+        type="file"
+        ref={fileInputRef}
+        onChange={onFileChange}
+        className="hidden"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {imagePreviewUrls.map((url: string, index: number) => (
+          <Card key={index} className="overflow-hidden border border-slate-200 shadow-sm group">
+            <div className="relative aspect-video bg-slate-100">
+              <img
+                src={url || "/placeholder.svg"}
+                alt={`Vista previa ${index + 1}`}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                style={getImageFilterStyle()}
+              />
+              <Button
+                onClick={() => onRemoveFile(index)}
+                variant="ghost"
+                className="absolute top-2 right-2 h-8 w-8 p-0 bg-black/60 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+              <div className="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-[11px] font-medium">
+                Imagen {index + 1}
+              </div>
+            </div>
+            <div className="p-4 space-y-3 bg-slate-50">
+              <div>
+                <Label className="text-[12px] font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Fecha de Captura <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="datetime-local"
+                  value={captureDates[index] || ""}
+                  onChange={(e) => onDateChange(index, e.target.value)}
+                  className="h-9 text-[13px] border-slate-300 focus:border-blue-500 rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <Label className="text-[12px] font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  Descripción (Opcional)
+                </Label>
+                <Input
+                  value={descriptions[index] || ""}
+                  onChange={(e) => onDescriptionChange(index, e.target.value)}
+                  placeholder="Añadir nota..."
+                  className="h-9 text-[13px] border-slate-300 focus:border-blue-500 rounded-lg"
+                />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </Card>
   </div>
 )
 
-// Componente para mostrar los resultados del análisis
-interface AnalysisResultsProps {
+interface AnalyzeStepProps {
+  loading: boolean
+}
+
+const AnalyzeStep: React.FC<AnalyzeStepProps> = ({ loading }) => (
+  <Card className="p-16 border-0 shadow-sm bg-white text-center">
+    <div className="flex flex-col items-center">
+      <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-6 animate-pulse">
+        <Sparkles className="w-10 h-10 text-blue-600" />
+      </div>
+      <h3 className="text-[24px] font-normal text-slate-900 mb-2">Analizando Imágenes</h3>
+      <p className="text-[15px] text-slate-600 mb-8">
+        Nuestro sistema está procesando tus imágenes con inteligencia artificial
+      </p>
+      <div className="w-full max-w-md">
+        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div className="h-full bg-blue-600 rounded-full animate-[progress_2s_ease-in-out_infinite]" />
+        </div>
+      </div>
+    </div>
+  </Card>
+)
+
+interface ResultsStepProps {
   result: UploadResponse
   remoteBaseUrl: string
   onOpenModal: (result: ImageResult) => void
 }
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, remoteBaseUrl, onOpenModal }) => {
-  const BASE_URL = remoteBaseUrl.endsWith('/') ? remoteBaseUrl.slice(0, -1) : remoteBaseUrl
+const ResultsStep: React.FC<ResultsStepProps> = ({ result, remoteBaseUrl, onOpenModal }) => {
+  const BASE_URL = remoteBaseUrl.endsWith("/") ? remoteBaseUrl.slice(0, -1) : remoteBaseUrl
 
   return (
-    <div className="p-4">
-      <h3 className="font-bold text-gray-800 text-lg mb-3">
-        Resultados del Análisis
-      </h3>
+    <div className="space-y-6">
+      {/* Summary Card */}
+      <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+            <Check className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-[20px] font-medium text-slate-900 mb-1">{result.ecosystem_name}</h3>
+            <p className="text-[14px] text-slate-700 mb-2">ID del Ecosistema: {result.ecosystem_id}</p>
+            <p className="text-[13px] text-slate-600">{result.message}</p>
+          </div>
+        </div>
+      </Card>
 
-      {/* Información General */}
-      <div className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
-        <p className="text-gray-700 font-medium text-sm">
-          <span className="font-bold">{result.ecosystem_name}</span> (ID: {result.ecosystem_id})
-        </p>
-        <p className="text-gray-600 text-xs mt-1">{result.message}</p>
-      </div>
-
-      <div className="border-t border-gray-200 pt-3">
-        <h4 className="font-bold text-gray-700 mb-3 text-sm">Detalle por Imagen:</h4>
-        <ul className="space-y-3 max-h-[500px] overflow-y-auto p-1">
-          {result.images.map((res) => (
-            <li
-              key={res.id}
-              className="flex flex-col text-gray-700 bg-white p-3 rounded-lg border border-gray-200 transition-all duration-200 hover:border-gray-300 relative"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-gray-800">Imagen ID: {res.id}</span>
-                </div>
-                {res.image && (
-                  <img
-                    src={`${BASE_URL}${res.image}`}
-                    alt={`Imagen ${res.id}`}
-                    className="w-16 h-12 object-cover rounded border border-gray-300 shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null
-                      e.currentTarget.src = "/placeholder.svg"
-                    }}
-                  />
-                )}
+      {/* Results Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {result.images.map((res) => (
+          <Card
+            key={res.id}
+            className="overflow-hidden border-0 shadow-sm bg-white group cursor-pointer hover:shadow-md transition-all"
+            onClick={() => onOpenModal(res)}
+          >
+            <div className="relative aspect-video bg-slate-100">
+              {res.image && (
+                <img
+                  src={`${BASE_URL}${res.image}`}
+                  alt={`Imagen ${res.id}`}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null
+                    e.currentTarget.src = "/placeholder.svg"
+                  }}
+                />
+              )}
+              <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-[11px] font-medium">
+                ID: {res.id}
               </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="space-y-1">
-                  <p><span className="font-semibold text-gray-700">Agua:</span> <span className="font-bold">{res.water_percentage}%</span></p>
-                  <p><span className="font-semibold text-gray-700">Área Agua:</span> {res.water_area_m2} m²</p>
+              <Button
+                variant="ghost"
+                className="absolute bottom-2 right-2 h-8 px-3 bg-white/90 hover:bg-white text-slate-900 rounded-lg opacity-0 group-hover:opacity-100 transition-all text-[12px] font-medium"
+              >
+                <ZoomIn className="w-3.5 h-3.5 mr-1.5" />
+                Ver Detalle
+              </Button>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50">
+                  <Droplets className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-[11px] text-blue-700 font-medium">Agua</p>
+                    <p className="text-[16px] font-bold text-blue-900">{res.water_percentage}%</p>
+                  </div>
                 </div>
-
-                <div className="space-y-1">
-                  <p><span className="font-semibold text-gray-700">Vegetación:</span> <span className="font-bold">{res.vegetation_percentage}%</span></p>
-                  <p><span className="font-semibold text-gray-700">Área Vegetación:</span> {res.vegetation_area_m2} m²</p>
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-green-50">
+                  <Leaf className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-[11px] text-green-700 font-medium">Vegetación</p>
+                    <p className="text-[16px] font-bold text-green-900">{res.vegetation_percentage}%</p>
+                  </div>
                 </div>
               </div>
-
+              <div className="space-y-1.5 text-[12px] text-slate-600">
+                <p>
+                  <span className="font-medium">Área Agua:</span> {res.water_area_m2} m²
+                </p>
+                <p>
+                  <span className="font-medium">Área Vegetación:</span> {res.vegetation_area_m2} m²
+                </p>
+              </div>
               {res.description && (
-                <p className="text-xs mt-2 text-gray-600 border-t pt-2">
-                  <span className="font-semibold">Descripción:</span> {res.description}
+                <p className="text-[12px] text-slate-600 mt-3 pt-3 border-t border-slate-100 italic">
+                  {res.description}
                 </p>
               )}
-
-              <button
-                onClick={() => onOpenModal(res)}
-                className="absolute bottom-2 right-2 text-gray-600 hover:text-gray-900 p-1 px-3 rounded-full transition-colors text-xs font-semibold border border-gray-300 hover:bg-gray-100 bg-white shadow-sm"
-                aria-label={`Ver detalles de Imagen ID: ${res.id}`}
-              >
-                Ver Imagen &gt;
-              </button>
-            </li>
-          ))}
-        </ul>
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
   )
 }
 
 // ------------------------------ //
-// COMPONENTE MODAL DE DETALLE - CORREGIDO //
+// MODAL COMPONENT //
 // ------------------------------ //
 
 interface ImageDetailModalProps {
@@ -703,58 +931,48 @@ interface ImageDetailModalProps {
   result: ImageResult | null
   remoteBaseUrl: string
 }
+
 const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, result, remoteBaseUrl }) => {
-  // 1. PRIMERO TODOS LOS HOOKS - SIEMPRE SE EJECUTAN
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden"
     } else {
-      document.body.style.overflow = 'unset'
-      document.documentElement.style.overflow = 'unset'
+      document.body.style.overflow = "unset"
     }
-
     return () => {
-      document.body.style.overflow = 'unset'
-      document.documentElement.style.overflow = 'unset'
+      document.body.style.overflow = "unset"
     }
   }, [isOpen])
 
-  // Manejar el cierre con Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
+      if (e.key === "Escape") onClose()
     }
-
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
+      document.addEventListener("keydown", handleEscape)
+      return () => document.removeEventListener("keydown", handleEscape)
     }
   }, [isOpen, onClose])
 
-  // 2. LUEGO LAS CONDICIONES - DESPUÉS DE TODOS LOS HOOKS
   if (!isOpen || !result) return null
 
-  // 3. FINALMENTE EL RESTO DEL CÓDIGO
-  const BASE_URL = remoteBaseUrl.endsWith('/') ? remoteBaseUrl.slice(0, -1) : remoteBaseUrl
+  const BASE_URL = remoteBaseUrl.endsWith("/") ? remoteBaseUrl.slice(0, -1) : remoteBaseUrl
   const imageUrl = `${BASE_URL}${result.image}`
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-80 p-4 transition-opacity duration-300"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden transform transition-transform duration-300 ease-out scale-100"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="grid md:grid-cols-[2.5fr_1.5fr] h-full">
-          {/* Columna de la Imagen Grande */}
-          <div className="bg-gray-900 flex items-center justify-center relative p-2 md:p-4 min-h-[400px]">
+        <div className="grid md:grid-cols-[2fr_1fr] h-full max-h-[90vh]">
+          {/* Image Section */}
+          <div className="bg-slate-900 flex items-center justify-center relative p-4 min-h-[400px]">
             <img
-              src={imageUrl}
+              src={imageUrl || "/placeholder.svg"}
               alt={`Detalle Imagen ID: ${result.id}`}
               className="max-h-full max-w-full object-contain"
               onError={(e) => {
@@ -762,53 +980,68 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, re
                 e.currentTarget.src = "/placeholder.svg"
               }}
             />
-            <button
+            <Button
               onClick={onClose}
-              className="absolute top-2 right-2 text-white p-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/80 transition-colors z-10 flex items-center justify-center"
-              aria-label="Cerrar"
+              variant="ghost"
+              className="absolute top-4 right-4 h-10 w-10 p-0 rounded-full bg-black/50 hover:bg-black/80 text-white"
             >
-              <span className="text-xl leading-none font-bold">×</span>
-            </button>
+              <X className="w-5 h-5" />
+            </Button>
           </div>
 
-          {/* Columna de los Datos */}
-          <div className="p-6 overflow-y-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4 border-b pb-2">
-              Detalles de Imagen ID: {result.id}
-            </h3>
+          {/* Details Section */}
+          <div className="p-8 overflow-y-auto bg-slate-50">
+            <h3 className="text-[24px] font-medium text-slate-900 mb-6">Detalles del Análisis</h3>
 
             <div className="space-y-4">
-              {/* Porcentajes */}
-              <div className="space-y-3">
-                <div className="p-3 border rounded-lg bg-blue-50">
-                  <p className="text-xs text-blue-700 font-semibold">Agua</p>
-                  <p className="text-xl font-extrabold text-blue-900">{result.water_percentage}%</p>
+              {/* Water Stats */}
+              <Card className="p-4 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                    <Droplets className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[12px] text-blue-700 font-medium">Cobertura de Agua</p>
+                    <p className="text-[28px] font-bold text-blue-900">{result.water_percentage}%</p>
+                  </div>
                 </div>
-                <div className="p-3 border rounded-lg bg-green-50">
-                  <p className="text-xs text-green-700 font-semibold">Vegetación</p>
-                  <p className="text-xl font-extrabold text-green-900">{result.vegetation_percentage}%</p>
-                </div>
-              </div>
-
-              {/* Áreas */}
-              <div className="space-y-3">
-                <div className="p-3 border rounded-lg bg-gray-50">
-                  <p className="text-sm font-semibold text-gray-700">Área de Agua (m²)</p>
-                  <p className="text-base text-gray-900 font-mono break-all">{result.water_area_m2} m²</p>
-                </div>
-                <div className="p-3 border rounded-lg bg-gray-50">
-                  <p className="text-sm font-semibold text-gray-700">Área de Vegetación (m²)</p>
-                  <p className="text-base text-gray-900 font-mono break-all">{result.vegetation_area_m2} m²</p>
-                </div>
-              </div>
-
-              {/* Descripción */}
-              <div className="pt-2 border-t">
-                <p className="text-sm font-semibold text-gray-700 mb-1">Descripción de la Imagen:</p>
-                <p className="text-base text-gray-800 italic">
-                  {result.description || "No se proporcionó una descripción."}
+                <p className="text-[13px] text-blue-800">
+                  <span className="font-medium">Área:</span> {result.water_area_m2} m²
                 </p>
-              </div>
+              </Card>
+
+              {/* Vegetation Stats */}
+              <Card className="p-4 border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center">
+                    <Leaf className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[12px] text-green-700 font-medium">Cobertura de Vegetación</p>
+                    <p className="text-[28px] font-bold text-green-900">{result.vegetation_percentage}%</p>
+                  </div>
+                </div>
+                <p className="text-[13px] text-green-800">
+                  <span className="font-medium">Área:</span> {result.vegetation_area_m2} m²
+                </p>
+              </Card>
+
+              {/* Description */}
+              {result.description && (
+                <Card className="p-4 border-0 shadow-sm bg-white">
+                  <div className="flex items-start gap-2 mb-2">
+                    <FileText className="w-4 h-4 text-slate-600 mt-0.5" />
+                    <p className="text-[12px] font-medium text-slate-700">Descripción</p>
+                  </div>
+                  <p className="text-[14px] text-slate-600 leading-relaxed">{result.description}</p>
+                </Card>
+              )}
+
+              {/* Image ID */}
+              <Card className="p-4 border-0 shadow-sm bg-white">
+                <p className="text-[12px] font-medium text-slate-700 mb-1">ID de Imagen</p>
+                <p className="text-[16px] font-mono text-slate-900">{result.id}</p>
+              </Card>
             </div>
           </div>
         </div>
@@ -816,4 +1049,5 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, re
     </div>
   )
 }
+
 export default PhotoAnalyzer

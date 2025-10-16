@@ -1,370 +1,435 @@
 "use client"
-import React, { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import {
-  Droplets,
-  TrendingUp,
-  BarChart3,
-  MapPin,
-  ArrowRight,
-  Calendar,
-  Camera,
-  Database,
-  Globe,
-  Zap,
-  Shield,
-  Eye,
-  Activity,
-  Layers,
-  Clock,
-  Image
-} from 'lucide-react'
-import { Header } from '@/components/header'
-import { Footer } from '@/components/footer'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { HeroImage } from '../components/hero-image'
-import MapComponent from '@/components/MapComponent';
-import PhotoAnalyzer from '@/components/PhotoAnalyzer'
 
-const HomePage: React.FC = () => {
-  const photoAnalyzerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<HTMLDivElement>(null)
-  const toolsRef = useRef<HTMLDivElement>(null)
-  const updatesRef = useRef<HTMLDivElement>(null)
+import type React from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image" // ¡IMPORTACIÓN NECESARIA!
+import { TrendingUp, ArrowRight, Database, ImageIcon, Map, Sparkles } from "lucide-react"
 
-  const fadeInUp = {
-    initial: { opacity: 0, y: 40 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
-  }
+// Component Imports
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { HeroImage } from "../components/hero-image"
+import MapComponent from "@/components/MapComponent"
+import PhotoAnalyzer from "@/components/PhotoAnalyzer"
 
-  const stagger = {
-    animate: {
-      transition: {
-        staggerChildren: 0.15
-      }
-    }
-  }
+// --- ENUMS AND TYPES ---
 
-  // Función para manejar la navegación por hash
-  const handleNavigation = (section: string) => {
-    switch (section) {
-      case 'photo-analyzer':
-        window.location.href = '/#photo-analyzer'
-        break
-      case 'map':
-        window.location.href = '/#map'
-        break
-      case 'tools':
-        window.location.href = '/#tools'
-        break
-      case 'updates':
-        window.location.href = '/#updates'
-        break
-      default:
-        break
-    }
-  }
+enum DashboardView {
+  Map = "map",
+  PhotoAnalyzer = "photo_analyzer",
+}
 
-  useEffect(() => {
-    // Manejar la navegación por hash
-    const handleHashChange = () => {
-      const hash = window.location.hash
-      
-      setTimeout(() => {
-        switch (hash) {
-          case '#photo-analyzer':
-            photoAnalyzerRef.current?.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'start'
-            })
-            break
-          case '#map':
-            mapRef.current?.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'start'
-            })
-            break
-          case '#tools':
-            toolsRef.current?.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'start'
-            })
-            break
-          case '#updates':
-            updatesRef.current?.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'start'
-            })
-            break
-          default:
-            break
-        }
-      }, 100)
-    }
+type ToolFeature = {
+  icon: React.ElementType
+  title: string
+  description: string
+  stats: string[]
+  gradient: string
+  section: string
+  view: DashboardView | null
+  accentColor: string
+}
 
-    // Ejecutar al cargar la página si hay hash
-    handleHashChange()
+// --- CONSTANTES ---
 
-    // Escuchar cambios en el hash
-    window.addEventListener('hashchange', handleHashChange)
+const fadeInUp = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+}
 
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange)
-    }
-  }, [])
+const stagger = {
+  animate: {
+    transition: {
+      staggerChildren: 0.04,
+    },
+  },
+}
+
+const viewVariants = {
+  initial: { opacity: 0, scale: 0.98 },
+  in: { opacity: 1, scale: 1, transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] } },
+  out: { opacity: 0, scale: 0.98, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } },
+}
+
+const dashboardOptions: {
+  id: DashboardView
+  title: string
+  description: string
+  lucideIcon: React.ElementType 
+  imageBaseName: "ubicacion" | "monitor" 
+}[] = [
+  {
+    id: DashboardView.Map,
+    title: "Visualizador Geoespacial",
+    description: "Explora datos en tiempo real con mapas interactivos",
+    lucideIcon: Map,
+    imageBaseName: "ubicacion",
+  },
+  {
+    id: DashboardView.PhotoAnalyzer,
+    title: "Análisis de Imágenes",
+    description: "Procesamiento inteligente con visión por computadora",
+    lucideIcon: Sparkles,
+    imageBaseName: "monitor",
+  },
+]
+
+const toolsData: ToolFeature[] = [
+  // ... (toolsData permanece igual)
+  {
+    icon: Database,
+    title: "Histórico y Tendencias",
+    description: "Consulta más de 5 años de datos. Analiza patrones temporales y proyecciones de impacto.",
+    stats: ["5 años de datos", "2.4M registros", "Proyecciones de impacto"],
+    gradient: "from-slate-700 to-slate-800",
+    section: "dashboard",
+    view: DashboardView.Map,
+    accentColor: "blue",
+  },
+  {
+    icon: TrendingUp,
+    title: "Modelos Predictivos",
+    description: "Modelos de IA predictivos con alta precisión. Genera alertas tempranas sobre riesgos.",
+    stats: ["94.2% precisión", "Alertas tempranas", "ML optimizado"],
+    gradient: "from-slate-600 to-slate-700",
+    section: "tools",
+    view: null,
+    accentColor: "blue",
+  },
+  {
+    icon: ImageIcon,
+    title: "Cuantificación de Cobertura",
+    description: "Detección y cuantificación automática de áreas de agua/vegetación mediante visión por computadora.",
+    stats: ["Procesamiento IA", "Resultados en segundos", "Múltiples formatos"],
+    gradient: "from-slate-800 to-slate-900",
+    section: "dashboard",
+    view: DashboardView.PhotoAnalyzer,
+    accentColor: "blue",
+  },
+]
+
+// MODIFICACIÓN PRINCIPAL: Usando <Image />
+interface DashboardTabIconProps {
+  imageBaseName: "ubicacion" | "monitor"
+  isSelected: boolean
+}
+
+const ICON_PATH = "/imgs-gifs/"
+
+const DashboardTabIcon: React.FC<DashboardTabIconProps> = ({
+  imageBaseName,
+  isSelected,
+}) => {
+  const [isHovered, setIsHovered] = useState(false)
+
+  // Clases para el contenedor del icono (el círculo de color)
+  const containerClasses = `w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300 overflow-hidden relative bg-transparent ${
+    isSelected ? "" : ""
+  }`
+
+  const showGif = isSelected || isHovered
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      <Header />
-
-      {/* Hero Section */}
-      <HeroImage />
-      
-     
-      {/* Photo Analyzer Section */}
-      <section 
-        id="photo-analyzer" 
-        ref={photoAnalyzerRef}
-        className="py-20 bg-[#d0d0d0] border border-[#bc955b] "
-      >
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl font-light text-red-800 mb-4 uppercase tracking-wide">
-              Análisis de Imágenes
-            </h2>
-            <div className="w-20 h-1 bg-red-800 mx-auto mb-6"></div>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Sube y analiza imágenes para detectar y cuantificar áreas de agua mediante inteligencia artificial
-            </p>
-          </motion.div>
-          <PhotoAnalyzer />
-        </div>
-      </section>
-
-      {/* HERRAMIENTAS ESPECIALIZADAS Section */}
-      <section 
-        id="tools" 
-        ref={toolsRef}
-        className="py-24 bg-white border-b border-gray-200 backdrop-blur-sm"
-      >
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            className="mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl font-light text-red-800 mb-4 uppercase tracking-wide">
-              HERRAMIENTAS ESPECIALIZADAS
-            </h2>
-            <div className="w-20 h-1 bg-red-800 mb-8"></div>
-            <p className="text-xl text-slate-600 max-w-3xl">
-              Accede a análisis histórico, predicciones avanzadas y visualizaciones en tiempo real
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-3 gap-4"
-            initial="initial"
-            whileInView="animate"
-            variants={stagger}
-            viewport={{ once: true }}
-          >
-            {[
-              {
-                icon: Calendar,
-                title: "Histórico",
-                description: "Análisis temporal completo",
-                stats: ["1,247 imágenes", "2.4M registros", "5 años de datos"],
-                gradient: "from-red-700 to-red-800",
-                section: "tools"
-              },
-              {
-                icon: Activity,
-                title: "Predicción",
-                description: "Modelos de IA avanzados",
-                stats: ["94.2% precisión", "Alertas tempranas", "ML optimizado"],
-                gradient: "from-red-600 to-red-700",
-                section: "tools"
-              },
-              {
-                icon: Image,
-                title: "Análisis de Imágenes",
-                description: "Detección automática de agua",
-                stats: ["Procesamiento IA", "Resultados en segundos", "Múltiples formatos"],
-                gradient: "from-red-800 to-red-900",
-                section: "photo-analyzer"
-              },
-            ].map((feature, index) => (
-              <motion.div key={index} variants={fadeInUp}>
-                <Card 
-                  className="p-4 h-full group cursor-pointer transition-all duration-300 bg-gray-50 border-0 shadow-sm hover:shadow-lg hover:border-red-200"
-                  onClick={() => handleNavigation(feature.section)}
-                >
-                  <div
-                    className={`w-12 h-12 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <feature.icon className="w-6 h-6 text-white" />
-                  </div>
-
-                  <h3 className="text-lg font-semibold text-red-800 mb-2">{feature.title}</h3>
-                  <p className="text-slate-600 mb-4 text-sm">{feature.description}</p>
-
-                  <div className="space-y-2 mb-4">
-                    {feature.stats.map((stat, i) => (
-                      <div key={i} className="flex items-center text-xs text-slate-500">
-                        <div className="w-1.5 h-1.5 bg-red-600 rounded-full mr-2"></div>
-                        {stat}
-                      </div>
-                    ))}
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    className="w-full group-hover:bg-slate-50 transition-colors text-yellow-600 hover:text-yellow-700 text-sm"
-                  >
-                    Explorar
-                    <ArrowRight className="w-3 h-3 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Updates Section */}
-      <section 
-        id="updates" 
-        ref={updatesRef}
-        className="py-24 bg-gradient-to-br from-slate-50 to-white"
-      >
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-5xl font-light text-slate-900 mb-6">
-              Últimas <span className="font-semibold">Actualizaciones</span>
-            </h2>
-            <p className="text-xl text-slate-600">
-              Mantente informado sobre los cambios más recientes
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid lg:grid-cols-2 gap-12"
-            initial="initial"
-            whileInView="animate"
-            variants={stagger}
-            viewport={{ once: true }}
-          >
-            <motion.div variants={fadeInUp}>
-              <Card className="p-10 h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-blue-500/20">
-                  <Shield className="w-10 h-10 text-white" />
-                </div>
-
-                <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-full mb-6">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                  Mejora Importante
-                </div>
-
-                <h3 className="text-2xl font-semibold text-slate-900 mb-4">
-                  Calidad del Agua Mejorada en 15%
-                </h3>
-
-                <p className="text-slate-600 mb-8 leading-relaxed">
-                  Los análisis recientes muestran mejoras significativas en oxígeno disuelto y reducción de turbidez en las últimas dos semanas.
-                </p>
-
-                <div className="flex items-center text-sm text-slate-500 mb-8">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span>Hace 2 días • Análisis Completo</span>
-                </div>
-
-                <Button variant="secondary" className="w-full">
-                  Leer Reporte Completo
-                </Button>
-              </Card>
-            </motion.div>
-
-            <motion.div className="space-y-6" variants={fadeInUp}>
-              {[
-                {
-                  icon: Zap,
-                  title: "Sistema de Alertas Implementado",
-                  description: "Notificaciones automáticas para cambios críticos",
-                  time: "Hace 1 semana",
-                  color: "yellow",
-                  bgColor: "bg-yellow-50",
-                  textColor: "text-yellow-600",
-                  borderColor: "border-yellow-200"
-                },
-                {
-                  icon: Camera,
-                  title: "Galería Fotográfica Actualizada",
-                  description: "Nuevas imágenes de alta resolución",
-                  time: "Hace 2 semanas",
-                  color: "green",
-                  bgColor: "bg-green-50",
-                  textColor: "text-green-600",
-                  borderColor: "border-green-200"
-                },
-                {
-                  icon: TrendingUp,
-                  title: "Modelos Predictivos Mejorados",
-                  description: "Algoritmos IA con 94.2% de precisión",
-                  time: "Hace 3 semanas",
-                  color: "purple",
-                  bgColor: "bg-purple-50",
-                  textColor: "text-purple-600",
-                  borderColor: "border-purple-200"
-                }
-              ].map((update, index) => (
-                <Card 
-                  key={index} 
-                  className="p-6 hover:shadow-lg transition-shadow cursor-pointer group border-0"
-                >
-                  <div className="flex gap-6">
-                    <div className={`w-14 h-14 ${update.bgColor} rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300 border ${update.borderColor}`}>
-                      <update.icon className={`w-6 h-6 ${update.textColor}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-slate-900 mb-2">{update.title}</h4>
-                      <p className="text-sm text-slate-600 mb-3">{update.description}</p>
-                      <div className="flex items-center text-xs text-slate-500">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {update.time}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-
-              <Button variant="ghost" className="w-full">
-                Ver Todas las Actualizaciones
-              </Button>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      <Footer />
+    <div
+      className={containerClasses}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Imagen PNG (estática) - siempre presente pero se oculta si el GIF está activo */}
+      <Image
+        src={`${ICON_PATH}${imageBaseName}.png`}
+        alt={`${imageBaseName} icon`}
+        width={56} // Aumentado para llenar el contenedor (w-14)
+        height={56} // Aumentado para llenar el contenedor (h-14)
+        className={`transition-all duration-300 ${showGif ? "opacity-0" : "opacity-100 filter grayscale"}`}
+        style={{ objectFit: "contain" }}
+      />
+      {/* Imagen GIF (animada) - superpuesta y se muestra al hacer hover/seleccionar */}
+      <Image
+        src={`${ICON_PATH}${imageBaseName}.gif`}
+        alt={`${imageBaseName} animated icon`}
+        width={56} // Aumentado para llenar el contenedor (w-14)
+        height={56} // Aumentado para llenar el contenedor (h-14)
+        // Estilo para que la imagen se ajuste y cambie de color 
+        // Nota: Tailwind classes como w-7/h-7 en <Image /> requieren 'fill' o que la imagen sea contenedora.
+        // Aquí usamos width/height y las clases de filtro.
+        className={`absolute transition-all duration-300 ${showGif ? "opacity-100" : "opacity-0"}`}
+        style={{ objectFit: "contain" }}
+        unoptimized // Los GIFS a menudo necesitan unoptimized=true para animarse
+      />
     </div>
   )
 }
+// ---------------------------------------------
+
+// --- COMPONENTE PRINCIPAL ---
+
+const HomePage: React.FC = () => {
+    // ... (El resto del componente HomePage permanece igual, solo utiliza el nuevo DashboardTabIcon)
+    const [currentView, setCurrentView] = useState<DashboardView>(DashboardView.Map)
+    const [isLoadingView, setIsLoadingView] = useState(false)
+    const integratedDashboardRef = useRef<HTMLDivElement>(null)
+    const toolsRef = useRef<HTMLDivElement>(null)
+    const updatesRef = useRef<HTMLDivElement>(null)
+  
+    const sectionRefs: Record<string, React.RefObject<HTMLDivElement>> = useMemo(
+      () => ({
+        "#dashboard": integratedDashboardRef,
+        "#tools": toolsRef,
+        "#updates": updatesRef,
+      }),
+      [],
+    )
+  
+    const handleNavigation = useCallback(
+      (section: string, view: DashboardView | null) => {
+        const targetHash = `#${section}`
+        if (window.location.hash !== targetHash) {
+          window.location.hash = targetHash
+        }
+  
+        if (view && section === "dashboard" && view !== currentView) {
+          setIsLoadingView(true)
+          setTimeout(() => {
+            setCurrentView(view)
+            setIsLoadingView(false)
+          }, 300)
+        }
+      },
+      [currentView],
+    )
+  
+    useEffect(() => {
+      const handleHashChange = () => {
+        const hash = window.location.hash
+        const targetRef = sectionRefs[hash]
+  
+        setTimeout(() => {
+          targetRef?.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          })
+        }, 100)
+      }
+  
+      handleHashChange()
+      window.addEventListener("hashchange", handleHashChange)
+  
+      return () => {
+        window.removeEventListener("hashchange", handleHashChange)
+      }
+    }, [sectionRefs])
+  
+    const currentOption = dashboardOptions.find((o) => o.id === currentView)
+  
+    return (
+      <div className="min-h-screen bg-white">
+        <Header onNavClick={(section) => handleNavigation(section, null)} />
+  
+        <HeroImage />
+  
+        {/* ========================================
+            PANEL DE CONTROL INTEGRADO (DASHBOARD)
+            ========================================
+        */}
+        <section id="dashboard" ref={integratedDashboardRef} className="py-24 bg-white relative overflow-hidden">
+          <div className="absolute left-32 top-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-300/40 to-pink-200/50 blur-3xl pointer-events-none"></div>
+          <div className="absolute right-20 bottom-32 w-[450px] h-[450px] rounded-full bg-gradient-to-br from-purple-300/30 to-blue-300/30  pointer-events-none"></div>
+  
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <motion.div
+              className="text-center mb-16"
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              viewport={{ once: true, amount: 0.2 }}
+            >
+              <h2 className="text-[44px] font-normal text-slate-900 mb-4 tracking-tight leading-tight">
+                Panel de Control
+              </h2>
+              <p className="text-[17px] text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed">
+                Accede a la visualización geoespacial en tiempo real o al motor de análisis de IA
+              </p>
+            </motion.div>
+  
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1], delay: 0.05 }}
+              viewport={{ once: true, amount: 0.2 }}
+            >
+              {dashboardOptions.map((option) => (
+                <motion.div
+                  key={option.id}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card
+                    onClick={() => handleNavigation("dashboard", option.id)}
+                    className={`p-6 cursor-pointer transition-all duration-300 border-1 ${
+                      currentView === option.id
+                        ? "border-blue-200 bg-blue-50/40 shadow-lg shadow-blue-100/50"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Usamos el componente DashboardTabIcon para el efecto PNG/GIF */}
+                      <DashboardTabIcon 
+                        imageBaseName={option.imageBaseName} 
+                        isSelected={currentView === option.id}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className={`text-[18px] font-medium mb-1.5 transition-colors ${
+                            currentView === option.id ? "text-blue-700" : "text-slate-900"
+                          }`}
+                        >
+                          {option.title}
+                        </h3>
+                        <p className="text-[14px] text-slate-600 leading-relaxed">{option.description}</p>
+                      </div>
+                     
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+  
+            <motion.div
+              className="min-h-[650px] border-1 border-slate-100 rounded-2xl shadow-lg overflow-hidden bg-white relative"
+              initial="initial"
+              whileInView="animate"
+              variants={fadeInUp}
+              viewport={{ once: true, amount: 0.1 }}
+            >
+              {/* ENCABEZADO DEL DASHBOARD: Usando Lucide Icons */}
+              <div className="p-5 bg-blue-100 text-slate-700 font-medium flex items-center justify-between border-b-1 border-slate-200 relative backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                 
+                  <span className="text-[16px] font-medium text-slate-900">
+                    {currentOption?.title}
+                  </span>
+                </div>
+              
+                <AnimatePresence>
+                  {isLoadingView && (
+                    <motion.div
+                      className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600"
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      exit={{ width: "0%", transition: { duration: 0.15 } }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+  
+              <div className="relative bg-white">
+                <AnimatePresence mode="wait">
+                  {currentView === DashboardView.Map && (
+                    <motion.div
+                      key="map"
+                      variants={viewVariants}
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      className="w-full h-[600px]"
+                    >
+                      <MapComponent />
+                    </motion.div>
+                  )}
+                  {currentView === DashboardView.PhotoAnalyzer && (
+                    <motion.div
+                      key="analyzer"
+                      variants={viewVariants}
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      className="w-full p-8"
+                    >
+                      <PhotoAnalyzer />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+  
+        {/* ========================================
+            HERRAMIENTAS ESPECIALIZADAS
+            ========================================
+        */}
+        <section id="tools" ref={toolsRef} className="py-24 bg-slate-50/50">
+          <div className="max-w-7xl mx-auto px-6">
+            <motion.div
+              className="mb-16"
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              viewport={{ once: true, amount: 0.2 }}
+            >
+              <h2 className="text-[44px] font-normal text-slate-900 mb-4 tracking-tight leading-tight">
+                Módulos de Análisis
+              </h2>
+              <p className="text-[17px] text-slate-600 max-w-2xl font-normal leading-relaxed">
+                Capacidades especializadas para la toma de decisiones estratégicas en conservación
+              </p>
+            </motion.div>
+  
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              initial="initial"
+              whileInView="animate"
+              variants={stagger}
+              viewport={{ once: true, amount: 0.2 }}
+            >
+              {toolsData.map((feature, index) => (
+                <motion.div key={index} variants={fadeInUp}>
+                  <Card
+                    className="p-7 h-full group cursor-pointer transition-all duration-200 bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 rounded-xl"
+                    onClick={() => handleNavigation(feature.section, feature.view)}
+                  >
+                   
+  
+                    <h3 className="text-[22px] font-medium text-slate-900 mb-3 tracking-tight leading-snug">
+                      {feature.title}
+                    </h3>
+                    <p className="text-[15px] text-slate-600 mb-6 leading-relaxed">{feature.description}</p>
+  
+                    <div className="space-y-2.5 mb-6">
+                      {feature.stats.map((stat, i) => (
+                        <div key={i} className="flex items-center text-[14px] text-slate-700">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-3 flex-shrink-0" />
+                          <span className="font-normal">{stat}</span>
+                        </div>
+                      ))}
+                    </div>
+  
+                    <Button
+                      variant="ghost"
+                      className="w-full h-11 text-[15px] text-blue-600  hover:text-blue-600 hover:bg-blue-50 font-medium transition-colors border border-slate-200 hover:border-blue-200 rounded-lg"
+                    >
+                      Acceder
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
+                    </Button>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+  
+        {/* Footer */}
+        <Footer />
+      </div>
+    )
+  }
 
 export default HomePage

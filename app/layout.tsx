@@ -1,4 +1,5 @@
 import type React from "react"
+import { Toaster } from 'react-hot-toast'
 import type { Metadata } from "next"
 import { Geist, Playfair_Display } from "next/font/google"
 import "./globals.css"
@@ -28,7 +29,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${geist.variable} ${playfair.variable} antialiased`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+        <Toaster position="top-right" />
+      </body>
     </html>
   )
 }
