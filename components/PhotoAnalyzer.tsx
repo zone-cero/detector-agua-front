@@ -1,4 +1,3 @@
-"use client" // 🚨 MODIFICACIÓN REALIZADA AQUÍ
 
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
