@@ -186,44 +186,50 @@ const HomePage: React.FC = () => {
     )
   
     const handleNavigation = useCallback(
-      (section: string, view: DashboardView | null) => {
-        const targetHash = `#${section}`
-        if (window.location.hash !== targetHash) {
-          window.location.hash = targetHash
-        }
-  
-        if (view && section === "dashboard" && view !== currentView) {
-          setIsLoadingView(true)
-          setTimeout(() => {
-            setCurrentView(view)
-            setIsLoadingView(false)
-          }, 300)
-        }
-      },
-      [currentView],
-    )
+  (section: string, view: DashboardView | null) => {
+    const targetHash = `#${section}`
+
+    if (typeof window !== "undefined") {
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash
+      }
+    }
+
+    if (view && section === "dashboard" && view !== currentView) {
+      setIsLoadingView(true)
+      setTimeout(() => {
+        setCurrentView(view)
+        setIsLoadingView(false)
+      }, 300)
+    }
+  },
+  [currentView]
+)
+
   
     useEffect(() => {
-      const handleHashChange = () => {
-        const hash = window.location.hash
-        const targetRef = sectionRefs[hash]
-  
-        setTimeout(() => {
-          targetRef?.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          })
-        }, 100)
-      }
-  
-      handleHashChange()
-      window.addEventListener("hashchange", handleHashChange)
-  
-      return () => {
-        window.removeEventListener("hashchange", handleHashChange)
-      }
-    }, [sectionRefs])
-  
+  if (typeof window === "undefined") return
+
+  const handleHashChange = () => {
+    const hash = window.location.hash
+    const targetRef = sectionRefs[hash]
+
+    setTimeout(() => {
+      targetRef?.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    }, 100)
+  }
+
+  handleHashChange()
+  window.addEventListener("hashchange", handleHashChange)
+
+  return () => {
+    window.removeEventListener("hashchange", handleHashChange)
+  }
+}, [sectionRefs])
+
     const currentOption = dashboardOptions.find((o) => o.id === currentView)
   
     return (
