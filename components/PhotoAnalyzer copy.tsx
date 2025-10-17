@@ -668,8 +668,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, remoteBaseUrl
                 </div>
 
                 <div className="space-y-1">
-                  <p><span className="font-semibold text-gray-700">Vegetación:</span> <span className="font-bold">{res.vegetation_percentage}%</span></p>
-                  <p><span className="font-semibold text-gray-700">Área Vegetación:</span> {res.vegetation_area_m2} m²</p>
+                  <p><span className="font-semibold text-gray-700">Lirio:</span> <span className="font-bold">{res.vegetation_percentage}%</span></p>
+                  <p><span className="font-semibold text-gray-700">Área Lirio:</span> {res.vegetation_area_m2} m²</p>
                 </div>
               </div>
 
@@ -766,7 +766,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, re
                   <p className="text-xl font-extrabold text-blue-900">{result.water_percentage}%</p>
                 </div>
                 <div className="p-3 border rounded-lg bg-green-50">
-                  <p className="text-xs text-green-700 font-semibold">Vegetación</p>
+                  <p className="text-xs text-green-700 font-semibold">Lirio</p>
                   <p className="text-xl font-extrabold text-green-900">{result.vegetation_percentage}%</p>
                 </div>
               </div>
@@ -778,7 +778,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, re
                   <p className="text-base text-gray-900 font-mono break-all">{result.water_area_m2} m²</p>
                 </div>
                 <div className="p-3 border rounded-lg bg-gray-50">
-                  <p className="text-sm font-semibold text-gray-700">Área de Vegetación (m²)</p>
+                  <p className="text-sm font-semibold text-gray-700">Área de Lirio (m²)</p>
                   <p className="text-base text-gray-900 font-mono break-all">{result.vegetation_area_m2} m²</p>
                 </div>
               </div>

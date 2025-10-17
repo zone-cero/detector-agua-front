@@ -222,7 +222,7 @@ export default function GaleriaPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Cobertura Vegetación</p>
+                  <p className="text-muted-foreground">Cobertura Lirio</p>
                   <p className="font-medium text-green-600">{selectedImage.vegetation_percentage.toFixed(2)}%</p>
                 </div>
                 <div>

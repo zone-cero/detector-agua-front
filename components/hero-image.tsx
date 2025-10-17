@@ -133,7 +133,7 @@ export function HeroImage() {
 
               {/* Párrafo simplificado y preciso */}
               <p className="text-lg lg:text-xl text-slate-600 leading-relaxed max-w-xl z-10">
-                Sistema para cuantificar áreas de agua y vegetación en imágenes. Permite comparar los cambios históricos y monitorear ecosistemas.
+                Sistema para cuantificar áreas de agua y Lirio en imágenes. Permite comparar los cambios históricos y monitorear ecosistemas.
               </p>
             </div>
 

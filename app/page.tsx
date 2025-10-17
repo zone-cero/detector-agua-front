@@ -94,7 +94,7 @@ const dashboardOptions: {
 
 const toolsData = [
   {
-    title: 'Cuantificación de Agua y Vegetación',
+    title: 'Cuantificación de Agua y Lirio',
     description: 'Ejecuta la IA para medir el área (m²) y porcentaje de agua y cobertura vegetal en tus imágenes.',
     section: 'analisis',
     view: 'cuantificacion',

@@ -212,7 +212,7 @@ export default function TendenciasPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>Promedio Vegetación</CardDescription>
+                <CardDescription>Promedio Lirio</CardDescription>
                 <CardTitle className="text-3xl font-bold text-green-600">
                   {analysisData.avgVegetation.toFixed(2)}%
                 </CardTitle>
@@ -240,7 +240,7 @@ export default function TendenciasPage() {
 
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>Rango Vegetación</CardDescription>
+                <CardDescription>Rango Lirio</CardDescription>
                 <CardTitle className="text-2xl font-bold">
                   {analysisData.minVeg.toFixed(1)}% - {analysisData.maxVeg.toFixed(1)}%
                 </CardTitle>
@@ -271,7 +271,7 @@ export default function TendenciasPage() {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="font-serif font-bold">Tendencia Temporal</CardTitle>
-              <CardDescription>Evolución mensual de cobertura de vegetación y agua</CardDescription>
+              <CardDescription>Evolución mensual de cobertura de Lirio y agua</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -281,7 +281,7 @@ export default function TendenciasPage() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="vegetacion" stroke="#22c55e" strokeWidth={2} name="Vegetación (%)" />
+                  <Line type="monotone" dataKey="vegetacion" stroke="#22c55e" strokeWidth={2} name="Lirio (%)" />
                   <Line type="monotone" dataKey="agua" stroke="#3b82f6" strokeWidth={2} name="Agua (%)" />
                 </LineChart>
               </ResponsiveContainer>

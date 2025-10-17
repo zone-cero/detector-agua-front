@@ -295,7 +295,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ isOpen, onClose, locationNa
                               <div className="w-3 h-3 bg-emerald-500 rounded-full transition-all duration-300 hover:scale-125"></div>{" "}
                               {/* Punto más chico */}
                               <span className="text-slate-600">
-                                Vegetación:{" "}
+                                Lirio:{" "}
                                 <strong className="text-slate-900">{record.vegetationPercentage.toFixed(1)}%</strong>
                               </span>
                             </div>
@@ -306,7 +306,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ isOpen, onClose, locationNa
                               <strong className="text-slate-900">{record.waterArea.toLocaleString()} m²</strong>
                             </div>
                             <div>
-                              Área vegetación:{" "}
+                              Área Lirio:{" "}
                               <strong className="text-slate-900">{record.vegetationArea.toLocaleString()} m²</strong>
                             </div>
                           </div>
@@ -373,7 +373,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ isOpen, onClose, locationNa
                           </div>
                         </div>
                         <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                          <div className="font-medium text-slate-600">Vegetación</div>
+                          <div className="font-medium text-slate-600">Lirio</div>
                           <div className="text-slate-900 font-semibold mt-1">
                             {selectedAnalysis.vegetationArea.toLocaleString()} m²
                           </div>

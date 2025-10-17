@@ -147,7 +147,7 @@ export default function HistoricoPage() {
                 Monitoreo <span className="text-primary">Histórico</span>
               </h1> {/* Titulo simplificado */}
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="200">
-                Revisión de la evolución del área de agua y vegetación en los ecosistemas a lo largo del tiempo.
+                Revisión de la evolución del área de agua y Lirio en los ecosistemas a lo largo del tiempo.
               </p> {/* Descripción ajustada al contexto */}
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function HistoricoPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  {/* Cobertura Vegetación */}
+                  {/* Cobertura Lirio */}
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div>
                       <p className="font-medium text-sm">Cobertura Vegetal (%)</p>

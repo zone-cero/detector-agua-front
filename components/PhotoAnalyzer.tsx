@@ -256,7 +256,7 @@ const HistoryListModal: React.FC<HistoryListModalProps> = ({
                     </p>
                     <p className="flex items-center text-green-700 mt-1">
                       <Leaf className="w-3 h-3 mr-2" />
-                      Vegetación: {image.vegetation_percentage.toFixed(2)}%
+                      Lirio: {image.vegetation_percentage.toFixed(2)}%
                     </p>
                     <p className="flex items-center text-blue-700">
                       <Droplets className="w-3 h-3 mr-2" />
@@ -441,7 +441,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
               <tr className="border-b">
                 <td className="px-4 py-2 flex items-center text-green-700">
                   <Leaf className="w-4 h-4 mr-2" />
-                  Área de Vegetación
+                  Área de Lirio
                 </td>
                 <td className="px-4 py-2 text-right font-medium">
                   {formatArea(result.vegetation_area_m2)} ({formatPercent(result.vegetation_percentage)})
@@ -480,7 +480,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
               <div className="p-3 border rounded-lg bg-white shadow-sm">
                 <p className="text-xs text-slate-600 flex items-center">
                   <Leaf className="w-3 h-3 mr-1 text-green-500" />
-                  Cambio en Vegetación
+                  Cambio en Lirio
                 </p>
                 <div className="text-lg mt-1">{renderDiff(vegDiff, "m²")}</div>
               </div>
@@ -805,11 +805,11 @@ const ResultsStep: React.FC<ResultsStepProps> = ({ result, onOpenModal }) => (
                 <p className="text-xs text-blue-700 opacity-80">({image.water_area_m2.toFixed(2)} m²)</p>
               </div>
             </div>
-            {/* Tarjeta de Vegetación Corregida */}
+            {/* Tarjeta de Lirio Corregida */}
             <div className="flex items-center space-x-2 p-2 bg-green-50 rounded-lg">
               <Leaf className="w-4 h-4 text-green-600 flex-shrink-0" />
               <div>
-                <p className="text-slate-600 text-xs">Vegetación</p>
+                <p className="text-slate-600 text-xs">Lirio</p>
                 {/* CORRECCIÓN: Eliminado el * 100 */}
                 <p className="font-bold text-green-700">{image.vegetation_percentage.toFixed(2)}%</p>
                 <p className="text-xs text-green-700 opacity-80">({image.vegetation_area_m2.toFixed(2)} m²)</p>
@@ -1387,7 +1387,7 @@ export default function PhotoAnalyzer() {
                   <div>
                     <h4 className="text-[14px] font-medium text-slate-900 mb-1">Análisis de Imagen</h4>
                     <p className="text-[13px] text-slate-700 leading-relaxed">
-                      Nuestro sistema utiliza modelos entrenados y herramientas de procesamiento de imágenes para detectar y cuantificar áreas de agua y vegetación con alta precisión.
+                      Nuestro sistema utiliza modelos entrenados y herramientas de procesamiento de imágenes para detectar y cuantificar áreas de agua y Lirio con alta precisión.
                     </p>
                   </div>
                 </div>
