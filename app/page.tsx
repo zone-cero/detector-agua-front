@@ -3,7 +3,8 @@
 import type React from "react"
 import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image" // ¡IMPORTACIÓN NECESARIA!
+import Image from "next/image"
+import dynamic from 'next/dynamic'
 import { TrendingUp, ArrowRight, Database, ImageIcon, Map, Sparkles } from "lucide-react"
 
 // Component Imports
@@ -12,8 +13,20 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { HeroImage } from "../components/hero-image"
-import MapComponent from "@/components/MapComponent"
-import PhotoAnalyzer from "@/components/PhotoAnalyzer"
+import PhotoAnalyzer from "@/components/PhotoAnalyzer" 
+
+// 🎯 SOLUCIÓN: Carga dinámica con ssr: false para evitar el error de "window is not defined"
+const DynamicMapComponent = dynamic(
+  () => import('@/components/MapComponent'),
+  {
+    ssr: false, 
+    loading: () => (
+        <div className="w-full h-[600px] flex items-center justify-center text-slate-500 bg-slate-50">
+            <Sparkles className="h-6 w-6 mr-2 animate-pulse text-blue-500" /> Cargando mapa geoespacial...
+        </div>
+    )
+  }
+)
 
 // --- ENUMS AND TYPES ---
 
@@ -79,7 +92,6 @@ const dashboardOptions: {
 ]
 
 const toolsData: ToolFeature[] = [
-  // ... (toolsData permanece igual)
   {
     icon: Database,
     title: "Histórico y Tendencias",
@@ -112,7 +124,7 @@ const toolsData: ToolFeature[] = [
   },
 ]
 
-// MODIFICACIÓN PRINCIPAL: Usando <Image />
+// Componente DashboardTabIcon
 interface DashboardTabIconProps {
   imageBaseName: "ubicacion" | "monitor"
   isSelected: boolean
@@ -126,7 +138,6 @@ const DashboardTabIcon: React.FC<DashboardTabIconProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false)
 
-  // Clases para el contenedor del icono (el círculo de color)
   const containerClasses = `w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300 overflow-hidden relative bg-transparent ${
     isSelected ? "" : ""
   }`
@@ -139,39 +150,35 @@ const DashboardTabIcon: React.FC<DashboardTabIconProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Imagen PNG (estática) - siempre presente pero se oculta si el GIF está activo */}
+      {/* Imagen PNG (estática) */}
       <Image
         src={`${ICON_PATH}${imageBaseName}.png`}
         alt={`${imageBaseName} icon`}
-        width={56} // Aumentado para llenar el contenedor (w-14)
-        height={56} // Aumentado para llenar el contenedor (h-14)
+        width={56} 
+        height={56} 
         className={`transition-all duration-300 ${showGif ? "opacity-0" : "opacity-100 filter grayscale"}`}
         style={{ objectFit: "contain" }}
       />
-      {/* Imagen GIF (animada) - superpuesta y se muestra al hacer hover/seleccionar */}
+      {/* Imagen GIF (animada) */}
       <Image
         src={`${ICON_PATH}${imageBaseName}.gif`}
         alt={`${imageBaseName} animated icon`}
-        width={56} // Aumentado para llenar el contenedor (w-14)
-        height={56} // Aumentado para llenar el contenedor (h-14)
-        // Estilo para que la imagen se ajuste y cambie de color 
-        // Nota: Tailwind classes como w-7/h-7 en <Image /> requieren 'fill' o que la imagen sea contenedora.
-        // Aquí usamos width/height y las clases de filtro.
+        width={56} 
+        height={56} 
         className={`absolute transition-all duration-300 ${showGif ? "opacity-100" : "opacity-0"}`}
         style={{ objectFit: "contain" }}
-        unoptimized // Los GIFS a menudo necesitan unoptimized=true para animarse
+        unoptimized 
       />
     </div>
   )
 }
-// ---------------------------------------------
 
-// --- COMPONENTE PRINCIPAL ---
+// --- COMPONENTE PRINCIPAL CORREGIDO ---
 
-const HomePage: React.FC = () => {
-    // ... (El resto del componente HomePage permanece igual, solo utiliza el nuevo DashboardTabIcon)
+const HomePage: React.FC = () => { 
     const [currentView, setCurrentView] = useState<DashboardView>(DashboardView.Map)
     const [isLoadingView, setIsLoadingView] = useState(false)
+    const [isClient, setIsClient] = useState(false) // 🆕 Estado para detectar cliente
     const integratedDashboardRef = useRef<HTMLDivElement>(null)
     const toolsRef = useRef<HTMLDivElement>(null)
     const updatesRef = useRef<HTMLDivElement>(null)
@@ -184,55 +191,60 @@ const HomePage: React.FC = () => {
       }),
       [],
     )
+
+    // 🆕 Detectar cuando estamos en el cliente
+    useEffect(() => {
+      setIsClient(true)
+    }, [])
   
     const handleNavigation = useCallback(
-  (section: string, view: DashboardView | null) => {
-    const targetHash = `#${section}`
+      (section: string, view: DashboardView | null) => {
+        // 🆕 Solo ejecutar en el cliente
+        if (!isClient) return
 
-    if (typeof window !== "undefined") {
-      if (window.location.hash !== targetHash) {
-        window.location.hash = targetHash
-      }
-    }
-
-    if (view && section === "dashboard" && view !== currentView) {
-      setIsLoadingView(true)
-      setTimeout(() => {
-        setCurrentView(view)
-        setIsLoadingView(false)
-      }, 300)
-    }
-  },
-  [currentView]
-)
-
+        const targetHash = `#${section}`
+        if (window.location.hash !== targetHash) {
+          window.location.hash = targetHash
+        }
+  
+        if (view && section === "dashboard" && view !== currentView) {
+          setIsLoadingView(true)
+          setTimeout(() => {
+            setCurrentView(view)
+            setIsLoadingView(false)
+          }, 300)
+        }
+      },
+      [currentView, isClient], // 🆕 Agregar isClient como dependencia
+    )
   
     useEffect(() => {
-  if (typeof window === "undefined") return
+      // 🆕 Solo ejecutar en el cliente
+      if (!isClient) return
 
-  const handleHashChange = () => {
-    const hash = window.location.hash
-    const targetRef = sectionRefs[hash]
-
-    setTimeout(() => {
-      targetRef?.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      })
-    }, 100)
-  }
-
-  handleHashChange()
-  window.addEventListener("hashchange", handleHashChange)
-
-  return () => {
-    window.removeEventListener("hashchange", handleHashChange)
-  }
-}, [sectionRefs])
-
+      const handleHashChange = () => {
+        const hash = window.location.hash
+        const targetRef = sectionRefs[hash]
+  
+        setTimeout(() => {
+          targetRef?.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          })
+        }, 100)
+      }
+  
+      handleHashChange()
+      window.addEventListener("hashchange", handleHashChange)
+  
+      return () => {
+        window.removeEventListener("hashchange", handleHashChange)
+      }
+    }, [sectionRefs, isClient]) // 🆕 Agregar isClient como dependencia
+  
     const currentOption = dashboardOptions.find((o) => o.id === currentView)
   
-    return (
+    return ( 
       <div className="min-h-screen bg-white">
         <Header onNavClick={(section) => handleNavigation(section, null)} />
   
@@ -244,7 +256,7 @@ const HomePage: React.FC = () => {
         */}
         <section id="dashboard" ref={integratedDashboardRef} className="py-24 bg-white relative overflow-hidden">
           <div className="absolute left-32 top-20 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-300/40 to-pink-200/50 blur-3xl pointer-events-none"></div>
-          <div className="absolute right-20 bottom-32 w-[450px] h-[450px] rounded-full bg-gradient-to-br from-purple-300/30 to-blue-300/30  pointer-events-none"></div>
+          <div className="absolute right-20 bottom-32 w-[450px] h-[450px] rounded-full bg-gradient-to-br from-purple-300/30 to-blue-300/30  pointer-events-none"></div>
   
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <motion.div
@@ -285,7 +297,7 @@ const HomePage: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-start gap-4">
-                      {/* Usamos el componente DashboardTabIcon para el efecto PNG/GIF */}
+                      {/* Componente para el efecto PNG/GIF */}
                       <DashboardTabIcon 
                         imageBaseName={option.imageBaseName} 
                         isSelected={currentView === option.id}
@@ -300,7 +312,6 @@ const HomePage: React.FC = () => {
                         </h3>
                         <p className="text-[14px] text-slate-600 leading-relaxed">{option.description}</p>
                       </div>
-                     
                     </div>
                   </Card>
                 </motion.div>
@@ -317,7 +328,6 @@ const HomePage: React.FC = () => {
               {/* ENCABEZADO DEL DASHBOARD: Usando Lucide Icons */}
               <div className="p-5 bg-blue-100 text-slate-700 font-medium flex items-center justify-between border-b-1 border-slate-200 relative backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                 
                   <span className="text-[16px] font-medium text-slate-900">
                     {currentOption?.title}
                   </span>
@@ -347,7 +357,8 @@ const HomePage: React.FC = () => {
                       exit="out"
                       className="w-full h-[600px]"
                     >
-                      <MapComponent />
+                      {/* 🎯 USO DEL COMPONENTE DINÁMICO */}
+                      <DynamicMapComponent />
                     </motion.div>
                   )}
                   {currentView === DashboardView.PhotoAnalyzer && (
@@ -402,7 +413,10 @@ const HomePage: React.FC = () => {
                     className="p-7 h-full group cursor-pointer transition-all duration-200 bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 rounded-xl"
                     onClick={() => handleNavigation(feature.section, feature.view)}
                   >
-                   
+                    {/* Se añade el ícono de Lucide */}
+                    <div className="mb-4 w-11 h-11 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 transition-all duration-300 group-hover:bg-blue-200/80">
+                      <feature.icon className="w-6 h-6" />
+                    </div>
   
                     <h3 className="text-[22px] font-medium text-slate-900 mb-3 tracking-tight leading-snug">
                       {feature.title}
@@ -420,7 +434,7 @@ const HomePage: React.FC = () => {
   
                     <Button
                       variant="ghost"
-                      className="w-full h-11 text-[15px] text-blue-600  hover:text-blue-600 hover:bg-blue-50 font-medium transition-colors border border-slate-200 hover:border-blue-200 rounded-lg"
+                      className="w-full h-11 text-[15px] text-blue-600 hover:text-blue-600 hover:bg-blue-50 font-medium transition-colors border border-slate-200 hover:border-blue-200 rounded-lg"
                     >
                       Acceder
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
@@ -435,7 +449,7 @@ const HomePage: React.FC = () => {
         {/* Footer */}
         <Footer />
       </div>
-    )
-  }
+    ) 
+  } 
 
 export default HomePage
