@@ -664,7 +664,6 @@ const ConfigureStep: React.FC<ConfigureStepProps> = ({
       </Card>
 
       <h3 className="text-[18px] font-medium text-slate-900 flex items-center">
-        <Layers className="w-5 h-5 mr-2 text-blue-600" />
         Imágenes a Analizar ({selectedFiles.length})
       </h3>
 
