@@ -256,11 +256,11 @@ const HistoryListModal: React.FC<HistoryListModalProps> = ({
                     </p>
                     <p className="flex items-center text-green-700 mt-1">
                       <Leaf className="w-3 h-3 mr-2" />
-                      Vegetación: {(image.vegetation_percentage * 100).toFixed(2)}%
+                      Vegetación: {image.vegetation_percentage.toFixed(2)}%
                     </p>
                     <p className="flex items-center text-blue-700">
                       <Droplets className="w-3 h-3 mr-2" />
-                      Agua: {(image.water_percentage * 100).toFixed(2)}%
+                      Agua: {image.water_percentage.toFixed(2)}%
                     </p>
                   </div>
                 </div>
@@ -343,8 +343,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
   }
 
   const formatArea = (area: number) => area.toFixed(2) + " m²"
-  const formatPercent = (percent: number) => (percent * 100).toFixed(2) + "%"
-
+  const formatPercent = (percent: number) => percent.toFixed(2) + "%"
   // 1. Obtener la URL de la API
   const imageUrlFromAPI = result.image;
 
@@ -464,11 +463,11 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
               Comparativa Histórica
             </h4>
             <p className="text-xs text-slate-500 mb-3">
-              Comparado con la captura anterior: 
+              Comparado con la captura anterior:
               {mostRecentHistoricalImage
                 ? formatDateForDisplay(mostRecentHistoricalImage.capture_date)
                 : "No hay historial previo."}
-              
+
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 border rounded-lg bg-white shadow-sm">
@@ -795,21 +794,24 @@ const ResultsStep: React.FC<ResultsStepProps> = ({ result, onOpenModal }) => (
               className="w-full h-full object-cover"
             />
           </div>
-
           <div className="grid grid-cols-2 gap-3 text-sm">
+            {/* Tarjeta de Agua Corregida */}
             <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg">
               <Droplets className="w-4 h-4 text-blue-600 flex-shrink-0" />
               <div>
                 <p className="text-slate-600 text-xs">Agua</p>
-                <p className="font-bold text-blue-700">{(image.water_percentage * 100).toFixed(2)}%</p>
+                {/* CORRECCIÓN: Eliminado el * 100 */}
+                <p className="font-bold text-blue-700">{image.water_percentage.toFixed(2)}%</p>
                 <p className="text-xs text-blue-700 opacity-80">({image.water_area_m2.toFixed(2)} m²)</p>
               </div>
             </div>
+            {/* Tarjeta de Vegetación Corregida */}
             <div className="flex items-center space-x-2 p-2 bg-green-50 rounded-lg">
               <Leaf className="w-4 h-4 text-green-600 flex-shrink-0" />
               <div>
                 <p className="text-slate-600 text-xs">Vegetación</p>
-                <p className="font-bold text-green-700">{(image.vegetation_percentage * 100).toFixed(2)}%</p>
+                {/* CORRECCIÓN: Eliminado el * 100 */}
+                <p className="font-bold text-green-700">{image.vegetation_percentage.toFixed(2)}%</p>
                 <p className="text-xs text-green-700 opacity-80">({image.vegetation_area_m2.toFixed(2)} m²)</p>
               </div>
             </div>
