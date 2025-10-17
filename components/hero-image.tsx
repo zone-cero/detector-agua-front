@@ -4,6 +4,8 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { Eye, ArrowRight } from 'lucide-react'
 import { Button } from './ui/button'
 import { useRef, useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation' // NUEVO: Importar useRouter
+
 
 const stagger = {
   animate: {
@@ -16,15 +18,16 @@ const stagger = {
 const fadeInUp = {
   initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },
-  // CAMBIO CLAVE: Aumentar la duración a 1.0 segundos para que sea lento
   transition: { duration: 5.0, ease: [0.4, 0, 0.5, 1] }, 
 };
+
 export function HeroImage() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start end', 'end start']
   })
+  const router = useRouter() // NUEVO: Obtener el router
 
   // Estado para la posición del cursor
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -45,8 +48,15 @@ export function HeroImage() {
   const yBackground = useTransform(scrollYProgress, [0, 1], ['-20%', '20%'])
   const yMap = useTransform(scrollYProgress, [0, 1], ['10%', '-10%'])
 
+  // NUEVO: Funciones de redirección separadas
   const handleRedirectToAnalyzer = () => {
-    window.location.href = '/#photo-analyzer'
+    // Redirige al analizador de imágenes
+    window.location.href = '/#dashboard'
+  }
+
+  const handleRedirectToHistory = () => {
+    // Redirige a la página de histórico
+    router.push('/historico')
   }
 
   return (
@@ -125,12 +135,14 @@ export function HeroImage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-5">
-              {/* Botón Explorar Datos */}
+              {/* Botón Ver Historial */}
               <Button
                 className="bg-transparent text-gray-600 border border-gray-600 
                transition ease-in-out duration-300 hover:bg-transparent"
                 size="lg"
-                onClick={handleRedirectToAnalyzer}
+                onClick={handleRedirectToHistory}
+                
+
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(75, 85, 99)';
                   e.currentTarget.style.transform = 'translateY(-3px)';
@@ -142,11 +154,11 @@ export function HeroImage() {
                   setIsHoveringButton(false);
                 }}
               >
-                <Eye className="w-5 h-5 mr-2" />
-                Explorar Datos
+                
+                Ver Historial
               </Button>
 
-              {/* Botón Ver Demostración */}
+              {/* Botón Analizar Imagen */}
               <Button
                 className="bg-transparent text-red-700 border border-red-700 
                transition ease-in-out duration-300 hover:bg-transparent"
@@ -164,7 +176,7 @@ export function HeroImage() {
                   setIsHoveringButton(false);
                 }}
               >
-                Ver Demostración
+                Analizar Imagen
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>

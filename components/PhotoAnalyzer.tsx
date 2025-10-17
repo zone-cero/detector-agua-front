@@ -105,7 +105,7 @@ const formatDateForDisplay = (dateString?: string): string => {
 
 const normalizeDateForAPI = (dateString: string): string => {
   if (!dateString) return ""
-  
+
   // Si ya tiene formato completo, dejarlo como está
   if (dateString.includes('T') && dateString.includes(':')) {
     // Asegurar que termine con Z si no tiene zona horaria
@@ -114,12 +114,12 @@ const normalizeDateForAPI = (dateString: string): string => {
     }
     return dateString
   }
-  
+
   // Si es formato datetime-local (YYYY-MM-DDTHH:MM), agregar segundos y Z
   if (dateString.length === 16) {
     return `${dateString}:00Z`
   }
-  
+
   return dateString
 }
 
@@ -235,9 +235,9 @@ const HistoryListModal: React.FC<HistoryListModalProps> = ({
                       alt={`Captura ${image.id}`}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        ;(e.target as HTMLImageElement).onerror = null
-                        ;(e.target as HTMLImageElement).src =
-                          'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-image-off"><path d="M10.5 8.5h.01"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9c0-.6.4-1.2.9-1.6L4 4"/></svg>'
+                        ; (e.target as HTMLImageElement).onerror = null
+                          ; (e.target as HTMLImageElement).src =
+                            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-image-off"><path d="M10.5 8.5h.01"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9c0-.6.4-1.2.9-1.6L4 4"/></svg>'
                       }}
                     />
                   </div>
@@ -346,41 +346,41 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
   const formatPercent = (percent: number) => (percent * 100).toFixed(2) + "%"
 
   // 1. Obtener la URL de la API
-const imageUrlFromAPI = result.image; 
+  const imageUrlFromAPI = result.image;
 
-// 2. Determinar la fuente final
-let finalSrc;
+  // 2. Determinar la fuente final
+  let finalSrc;
 
-if (typeof imageUrlFromAPI === 'string' && imageUrlFromAPI.length > 0) {
+  if (typeof imageUrlFromAPI === 'string' && imageUrlFromAPI.length > 0) {
     // Caso A: Si ya empieza con 'http' o 'https', ¡es una URL absoluta!
     if (imageUrlFromAPI.startsWith('http://') || imageUrlFromAPI.startsWith('https://')) {
-        finalSrc = imageUrlFromAPI;
-    } 
+      finalSrc = imageUrlFromAPI;
+    }
     // Caso B: Si no es una URL absoluta (es una ruta relativa como '/media/drones/...')
     else {
-        // Normalizamos la base para evitar dobles barras y concatenamos
-        const normalizedBase = REMOTE_BASE_URL.endsWith('/') 
-            ? REMOTE_BASE_URL.slice(0, -1) // Quitar barra final si existe
-            : REMOTE_BASE_URL;
-            
-        // Aseguramos que la ruta de la imagen empiece con una barra para la concatenación
-        const normalizedPath = imageUrlFromAPI.startsWith('/') 
-            ? imageUrlFromAPI 
-            : `/${imageUrlFromAPI}`;
-            
-        finalSrc = `${normalizedBase}${normalizedPath}`;
+      // Normalizamos la base para evitar dobles barras y concatenamos
+      const normalizedBase = REMOTE_BASE_URL.endsWith('/')
+        ? REMOTE_BASE_URL.slice(0, -1) // Quitar barra final si existe
+        : REMOTE_BASE_URL;
+
+      // Aseguramos que la ruta de la imagen empiece con una barra para la concatenación
+      const normalizedPath = imageUrlFromAPI.startsWith('/')
+        ? imageUrlFromAPI
+        : `/${imageUrlFromAPI}`;
+
+      finalSrc = `${normalizedBase}${normalizedPath}`;
     }
-} else {
+  } else {
     // Caso C: Si el campo 'image' está vacío o nulo
     finalSrc = '/placeholder.jpg'; // Usa una imagen de reserva local
-}
+  }
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Detalle de Captura ID: ${result.id}`} size="xl">
       <div className="grid md:grid-cols-[1.5fr_1fr] gap-6">
         <div className="space-y-4">
           <div className="relative h-96 rounded-lg overflow-hidden bg-slate-100 shadow-inner">
             <img
-               src={finalSrc }
+              src={finalSrc}
               alt={`Imagen ${result.id}`}
               className="w-full h-full object-contain"
             />
@@ -517,11 +517,10 @@ const UploadStep: React.FC<UploadStepProps> = ({
   onFileChange,
 }) => (
   <Card
-    className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 cursor-pointer ${
-      isDragging
+    className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 cursor-pointer ${isDragging
         ? "border-blue-500 bg-blue-50/50 shadow-lg scale-[1.02]"
         : "border-slate-300 bg-white hover:border-blue-400 hover:bg-slate-50 shadow-sm"
-    }`}
+      }`}
     onDragOver={onDragOver}
     onDragLeave={onDragLeave}
     onDrop={onDrop}
@@ -879,7 +878,7 @@ export default function PhotoAnalyzer() {
         if (currentStep === "upload") {
           setCurrentStep("configure")
         }
-        
+
         // Limpiar el input para permitir seleccionar los mismos archivos nuevamente
         e.target.value = ""
       }
@@ -1062,94 +1061,94 @@ export default function PhotoAnalyzer() {
   }
 
   const handleAnalyze = async () => {
-  const validationError = validateForm()
-  if (validationError) {
-    toast({
-      title: "Atención",
-      description: validationError,
-      variant: "destructive",
-    })
-    return
-  }
-
-  setLoading(true)
-  setCurrentStep("analyze")
-
-  try {
-    const formData = new FormData()
-
-    // ✅ CORREGIDO: Usar ecosystem_id cuando existe
-    if (ecosystemId && ecosystemId.trim() !== "new") {
-      formData.append("ecosystem_id", ecosystemId.trim())
-    } else {
-      formData.append("ecosystem_name", ecosystemName.trim())
+    const validationError = validateForm()
+    if (validationError) {
+      toast({
+        title: "Atención",
+        description: validationError,
+        variant: "destructive",
+      })
+      return
     }
 
-    // Agregar imágenes
-    selectedFiles.forEach((file) => {
-      formData.append("images", file)
-    })
+    setLoading(true)
+    setCurrentStep("analyze")
 
-    // ✅ CORREGIDO: Usar capture_dates (sin []) y formato correcto
-    captureDates.forEach((date) => {
-      const normalizedDate = normalizeDateForAPI(date)
-      formData.append("capture_dates", normalizedDate || getNowDatetimeLocal() + ":00Z")
-    })
+    try {
+      const formData = new FormData()
 
-    // ✅ CORREGIDO: Usar descriptions (sin [])
-    descriptions.forEach((desc) => {
-      formData.append("descriptions", desc || "")
-    })
-
-    const response = await fetch(`${REMOTE_BASE_URL}/api/monitoring/images/upload-multiple/`, {
-      method: "POST",
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const responseBody = await response.text()
-      let errorMessage = `Error del servidor: ${response.status} ${response.statusText}`
-      try {
-        const errorData = JSON.parse(responseBody)
-        errorMessage = errorData.error || errorData.detail || JSON.stringify(errorData) || errorMessage
-      } catch (parseError) {
-        if (responseBody) errorMessage = responseBody
-      }
-      throw new Error(errorMessage)
-    }
-
-    const result: UploadResponse = await response.json()
-    setAnalysisResult(result)
-    setCurrentStep("results")
-
-    toast({
-      title: "Análisis Completado",
-      description: result.message || "Las imágenes se analizaron con éxito.",
-      variant: "default",
-    })
-  } catch (error) {
-    let errorMessage = "Ocurrió un error inesperado."
-    if (error instanceof Error) {
-      if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
-        errorMessage = "No se pudo conectar con el servidor. Verifica la conexión."
+      // ✅ CORREGIDO: Usar ecosystem_id cuando existe
+      if (ecosystemId && ecosystemId.trim() !== "new") {
+        formData.append("ecosystem_id", ecosystemId.trim())
       } else {
-        errorMessage = error.message
+        formData.append("ecosystem_name", ecosystemName.trim())
       }
+
+      // Agregar imágenes
+      selectedFiles.forEach((file) => {
+        formData.append("images", file)
+      })
+
+      // ✅ CORREGIDO: Usar capture_dates (sin []) y formato correcto
+      captureDates.forEach((date) => {
+        const normalizedDate = normalizeDateForAPI(date)
+        formData.append("capture_dates", normalizedDate || getNowDatetimeLocal() + ":00Z")
+      })
+
+      // ✅ CORREGIDO: Usar descriptions (sin [])
+      descriptions.forEach((desc) => {
+        formData.append("descriptions", desc || "")
+      })
+
+      const response = await fetch(`${REMOTE_BASE_URL}/api/monitoring/images/upload-multiple/`, {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const responseBody = await response.text()
+        let errorMessage = `Error del servidor: ${response.status} ${response.statusText}`
+        try {
+          const errorData = JSON.parse(responseBody)
+          errorMessage = errorData.error || errorData.detail || JSON.stringify(errorData) || errorMessage
+        } catch (parseError) {
+          if (responseBody) errorMessage = responseBody
+        }
+        throw new Error(errorMessage)
+      }
+
+      const result: UploadResponse = await response.json()
+      setAnalysisResult(result)
+      setCurrentStep("results")
+
+      toast({
+        title: "Análisis Completado",
+        description: result.message || "Las imágenes se analizaron con éxito.",
+        variant: "default",
+      })
+    } catch (error) {
+      let errorMessage = "Ocurrió un error inesperado."
+      if (error instanceof Error) {
+        if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+          errorMessage = "No se pudo conectar con el servidor. Verifica la conexión."
+        } else {
+          errorMessage = error.message
+        }
+      }
+
+      console.error("ERROR al analizar las imágenes:", errorMessage)
+
+      toast({
+        title: "Error de Análisis",
+        description: errorMessage,
+        variant: "destructive",
+      })
+
+      setCurrentStep("configure")
+    } finally {
+      setLoading(false)
     }
-
-    console.error("ERROR al analizar las imágenes:", errorMessage)
-
-    toast({
-      title: "Error de Análisis",
-      description: errorMessage,
-      variant: "destructive",
-    })
-
-    setCurrentStep("configure")
-  } finally {
-    setLoading(false)
   }
-}
   const handleOpenModal = useCallback((result: ImageResult) => {
     setSelectedImageResult(result)
     setIsModalOpen(true)
@@ -1211,29 +1210,26 @@ export default function PhotoAnalyzer() {
                 <div key={step.id} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-                        isCompleted
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
                           ? "bg-blue-600 text-white"
                           : isActive
                             ? "bg-blue-100 text-blue-600 ring-4 ring-blue-100"
                             : "bg-slate-100 text-slate-400"
-                      }`}
+                        }`}
                     >
                       {isCompleted ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
                     </div>
                     <span
-                      className={`mt-2 text-[13px] font-medium ${
-                        isActive ? "text-slate-900" : isCompleted ? "text-blue-600" : "text-slate-400"
-                      }`}
+                      className={`mt-2 text-[13px] font-medium ${isActive ? "text-slate-900" : isCompleted ? "text-blue-600" : "text-slate-400"
+                        }`}
                     >
                       {step.label}
                     </span>
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`h-0.5 flex-1 mx-4 transition-all duration-300 ${
-                        isCompleted ? "bg-blue-600" : "bg-slate-200"
-                      }`}
+                      className={`h-0.5 flex-1 mx-4 transition-all duration-300 ${isCompleted ? "bg-blue-600" : "bg-slate-200"
+                        }`}
                     />
                   )}
                 </div>
@@ -1383,12 +1379,10 @@ export default function PhotoAnalyzer() {
             {currentStep !== "results" && (
               <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
                 <div className="flex items-start gap-3">
-                  <Sparkles className="w-6 h-6 text-blue-600 flex-shrink-0" />
                   <div>
                     <h4 className="text-[14px] font-medium text-slate-900 mb-1">Análisis de Imagen</h4>
                     <p className="text-[13px] text-slate-700 leading-relaxed">
-                      Nuestro sistema utiliza IA avanzada para detectar y cuantificar áreas de agua y vegetación con
-                      alta precisión
+                      Nuestro sistema utiliza modelos entrenados y herramientas de procesamiento de imágenes para detectar y cuantificar áreas de agua y vegetación con alta precisión.
                     </p>
                   </div>
                 </div>
