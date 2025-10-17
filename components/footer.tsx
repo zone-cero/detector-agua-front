@@ -6,9 +6,9 @@ import { Droplets, Mail, Phone, MapPin } from "lucide-react"
 
 export function Footer() {
   const contactItems = [
-    { icon: Mail, text: "info@aquamonitor.gov", href: "mailto:info@aquamonitor.gov" },
-    { icon: Phone, text: "+52 (55) 1234-5678", href: "tel:+525512345678" },
-    { icon: MapPin, text: "Ciudad de México, México", href: "#" },
+    { icon: Mail, text: "arturo.meneses@uthh.edu.mx", href: "arturo.meneses@uthh.edu.mx" },
+    { icon: Phone, text: "+52 (77) 5144 9297", href: "tel:+52 775 144 9297" },
+    { icon: MapPin, text: "Huejutla de Reyes, Hidalgo, México", href: "#" },
   ]
 
   return (
@@ -17,24 +17,22 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12 items-center">
           {/* Logo y descripción */}
           <div className="space-y-5">
-          <Image
+            <Image
               src="/imagenes/logo_gobierno_gold_ef3adc17fb.png"
               alt="Logo de Gobierno"
               width={240}
               height={60}
               className="object-contain"
             />
-            <Image src="/imagenes/Logo_gob_hidalgo.svg" alt="Logo de Gobierno" width={240} height={60} className="object-contain" />
             <p className="text-slate-600 leading-relaxed text-[15px] max-w-md">
-              Plataforma integral para el monitoreo y análisis de la calidad del agua en nuestra región, comprometidos
-              con la transparencia y el cuidado del medio ambiente.
+              Plataforma integral para la cuantificación y el análisis del área de cuerpos de agua y cobertura vegetal en nuestra región, promoviendo la gestión precisa de los recursos naturales.
             </p>
           </div>
 
-           {/* Contacto y Escudo */}
+          {/* Contacto y Escudo */}
           <div className="space-y-5 flex flex-col items-end">
             {/* Escudo */}
-            <Image src="/imagenes/escudo_blanco.png" alt="Escudo de Monitoreo de Agua" width={120} height={120} className="object-contain brightness-200 opacity-70" />
+            <Image src="/imagenes/Escudo_de_Armas_Oficial_del_Estado_de_Hidalgo.png" alt="Escudo de Monitoreo de Agua" width={120} height={120} className="object-contain opacity-70" />
 
             {/* Contacto */}
             <div className="space-y-3 text-right">
@@ -57,20 +55,12 @@ export function Footer() {
         <div className="pt-8 border-t border-slate-200 ">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 text-sm text-slate-500">
-              <Droplets className="w-4 h-4" />
               <span>© 2025 Sistema de Monitoreo de Cuerpos de Agua</span>
             </div>
 
             <div className="flex items-center gap-6 text-sm">
-              <Link href="#" className="text-slate-600 hover:text-blue-600 transition-colors">
-                Privacidad
-              </Link>
-              <Link href="#" className="text-slate-600 hover:text-blue-600 transition-colors">
-                Términos
-              </Link>
-              <Link href="#" className="text-slate-600 hover:text-blue-600 transition-colors">
-                Accesibilidad
-              </Link>
+              <Image src="/imagenes/Logo_gob_hidalgo.svg" alt="Logo de Gobierno" width={240} height={60} className="object-contain" />
+
             </div>
           </div>
         </div>

@@ -18,7 +18,7 @@ const stagger = {
 const fadeInUp = {
   initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 5.0, ease: [0.4, 0, 0.5, 1] }, 
+  transition: { duration: 5.0, ease: [0.4, 0, 0.5, 1] },
 };
 
 export function HeroImage() {
@@ -69,27 +69,24 @@ export function HeroImage() {
           y: mousePosition.y - 15,
           scale: isHoveringButton ? 1.5 : 1, // Efecto al hacer hover en botones
         }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 500, 
+        transition={{
+          type: "spring",
+          stiffness: 500,
           damping: 28,
           mass: 0.5
         }}
       >
-        <div className={`w-8 h-8 rounded-full ${
-          isHoveringButton 
-            ? 'bg-purple-400 blur-[1px]' 
-            : 'bg-gradient-to-br from-purple-500 to-pink-500'
-        } transition-all duration-300 ${
-          isHoveringButton ? 'opacity-80' : 'opacity-60'
-        } shadow-lg`} />
-        
+        <div className={`w-8 h-8 rounded-full ${isHoveringButton
+          ? 'bg-purple-400 blur-[1px]'
+          : 'bg-gradient-to-br from-purple-500 to-pink-500'
+          } transition-all duration-300 ${isHoveringButton ? 'opacity-80' : 'opacity-60'
+          } shadow-lg`} />
+
         {/* Efecto de resplandor */}
-        <div className={`absolute inset-0 rounded-full ${
-          isHoveringButton 
-            ? 'bg-purple-300 animate-pulse' 
-            : 'bg-purple-400'
-        } blur-md opacity-30 -z-10 transition-all duration-300`} />
+        <div className={`absolute inset-0 rounded-full ${isHoveringButton
+          ? 'bg-purple-300 animate-pulse'
+          : 'bg-purple-400'
+          } blur-md opacity-30 -z-10 transition-all duration-300`} />
       </motion.div>
 
       {/* Background Elements con Paralaje */}
@@ -114,35 +111,39 @@ export function HeroImage() {
           variants={stagger}
         >
           {/* Columna Izquierda - Título y contenido */}
-          <motion.div className="space-y-6 max-w-4xl" variants={fadeInUp}>
-            <div className="space-y-3">
-              <div className="absolute left-32 top-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-"></div>
-              <h1 className="text-7xl lg:text-6xl font-light text-slate-900 leading-tight relative">
-                <span className="block font-semibold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent relative z-1">
-                  Sistema de Gestión
+          <motion.div className="space-y-10 max-w-6xl" variants={fadeInUp}>
+            {/* Ajuste de espaciado en el contenedor principal del texto */}
+            <div className="space-y-4 relative">
+              {/* Posicionamiento del blur ajustado para centrarlo (mejor práctica) */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-3xl z-0"></div>
+
+              {/* Ajuste de tamaño y leading (leading-snug) en H1 */}
+              <h1 className="text-6xl lg:text-5xl font-light text-slate-900 leading-snug relative z-10">
+                {/* Reorganización de spans para un ancho más equilibrado */}
+                <span className="block font-semibold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent">
+                  Análisis de Imágenes
                 </span>
-                <span className="block font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent relative z-1">
-                  de Áreas Naturales
+                <span className="block font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent">
+                  para Monitoreo
                 </span>
-                <span className="block font-light text-slate-600 relative z-1">
-                  Protegidas
+                <span className="block font-light text-slate-600">
+                  Hídrico y Vegetal
                 </span>
               </h1>
 
+              {/* Párrafo simplificado y preciso */}
               <p className="text-lg lg:text-xl text-slate-600 leading-relaxed max-w-xl z-10">
-                Plataforma avanzada que combina análisis predictivo, visualización de datos y monitoreo continuo para la gestión inteligente de recursos hídricos.
+                Sistema para cuantificar áreas de agua y vegetación en imágenes. Permite comparar los cambios históricos y monitorear ecosistemas.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-5">
-              {/* Botón Ver Historial */}
+            <div className="flex flex-col sm:flex-row gap-5 relative z-10">
+              {/* Botón Ver Historial - ESTILOS ORIGINALES MANTENIDOS */}
               <Button
                 className="bg-transparent text-gray-600 border border-gray-600 
-               transition ease-in-out duration-300 hover:bg-transparent"
+                transition ease-in-out duration-300 hover:bg-transparent"
                 size="lg"
                 onClick={handleRedirectToHistory}
-                
-
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(75, 85, 99)';
                   e.currentTarget.style.transform = 'translateY(-3px)';
@@ -154,14 +155,13 @@ export function HeroImage() {
                   setIsHoveringButton(false);
                 }}
               >
-                
                 Ver Historial
               </Button>
 
-              {/* Botón Analizar Imagen */}
+              {/* Botón Analizar Imagen - ESTILOS ORIGINALES MANTENIDOS */}
               <Button
                 className="bg-transparent text-red-700 border border-red-700 
-               transition ease-in-out duration-300 hover:bg-transparent"
+                transition ease-in-out duration-300 hover:bg-transparent"
                 variant="secondary"
                 size="lg"
                 onClick={handleRedirectToAnalyzer}

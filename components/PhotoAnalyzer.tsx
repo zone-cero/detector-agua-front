@@ -213,8 +213,8 @@ const HistoryListModal: React.FC<HistoryListModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title={`Historial de Capturas: ${ecosystemName}`} size="lg">
       <div className="space-y-4">
         <p className="text-sm text-slate-600 border-b pb-4">
-          Mostrando **{historicalImages.length}** capturas históricas encontradas para el ecosistema **"{ecosystemName}
-          "**. Las imágenes se listan de la más reciente a la más antigua.
+          Mostrando {historicalImages.length} capturas históricas encontradas para el ecosistema "{ecosystemName}
+          ". Las imágenes se listan de la más reciente a la más antigua.
         </p>
         {sortedHistory.length === 0 ? (
           <div className="p-6 text-center text-slate-500 border rounded-lg bg-slate-50">
@@ -256,11 +256,11 @@ const HistoryListModal: React.FC<HistoryListModalProps> = ({
                     </p>
                     <p className="flex items-center text-green-700 mt-1">
                       <Leaf className="w-3 h-3 mr-2" />
-                      Vegetación: **{(image.vegetation_percentage * 100).toFixed(2)}%**
+                      Vegetación: {(image.vegetation_percentage * 100).toFixed(2)}%
                     </p>
                     <p className="flex items-center text-blue-700">
                       <Droplets className="w-3 h-3 mr-2" />
-                      Agua: **{(image.water_percentage * 100).toFixed(2)}%**
+                      Agua: {(image.water_percentage * 100).toFixed(2)}%
                     </p>
                   </div>
                 </div>
@@ -389,7 +389,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
             </div>
           </div>
           <p className="text-sm text-slate-600">
-            **Descripción:** {result.description || "Sin descripción proporcionada."}
+            Descripción: {result.description || "Sin descripción proporcionada."}
           </p>
           {/* ✅ CORREGIDO: Verificar si metadata existe */}
           {result.metadata && (
@@ -464,11 +464,11 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
               Comparativa Histórica
             </h4>
             <p className="text-xs text-slate-500 mb-3">
-              Comparado con la captura anterior: **
+              Comparado con la captura anterior: 
               {mostRecentHistoricalImage
                 ? formatDateForDisplay(mostRecentHistoricalImage.capture_date)
                 : "No hay historial previo."}
-              **
+              
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 border rounded-lg bg-white shadow-sm">
@@ -518,8 +518,8 @@ const UploadStep: React.FC<UploadStepProps> = ({
 }) => (
   <Card
     className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 cursor-pointer ${isDragging
-        ? "border-blue-500 bg-blue-50/50 shadow-lg scale-[1.02]"
-        : "border-slate-300 bg-white hover:border-blue-400 hover:bg-slate-50 shadow-sm"
+      ? "border-blue-500 bg-blue-50/50 shadow-lg scale-[1.02]"
+      : "border-slate-300 bg-white hover:border-blue-400 hover:bg-slate-50 shadow-sm"
       }`}
     onDragOver={onDragOver}
     onDragLeave={onDragLeave}
@@ -648,7 +648,7 @@ const ConfigureStep: React.FC<ConfigureStepProps> = ({
             ) : (
               <ListOrdered className="w-4 h-4 mr-2" />
             )}
-            **Historial:** {historicalImages.length} capturas previas encontradas.
+            Historial: {historicalImages.length} capturas previas encontradas.
           </p>
           <Button
             onClick={onOpenHistoryListModal}
@@ -766,7 +766,7 @@ const ResultsStep: React.FC<ResultsStepProps> = ({ result, onOpenModal }) => (
         Análisis Finalizado
       </h3>
       <p className="text-[16px] text-slate-700">
-        Las {result.images.length} imágenes fueron analizadas y guardadas en el ecosistema **{result.ecosystem_name}**
+        Las {result.images.length} imágenes fueron analizadas y guardadas en el ecosistema {result.ecosystem_name}
         (ID: {result.ecosystem_id}).
       </p>
     </Card>
@@ -1196,7 +1196,7 @@ export default function PhotoAnalyzer() {
         <div className="mb-8">
           <h2 className="text-[32px] font-normal text-slate-900 mb-2">Análisis de Imágenes</h2>
           <p className="text-[16px] text-slate-600">
-            Detecta y cuantifica áreas de agua y vegetación con inteligencia artificial
+            Detecta y cuantifica el área de cuerpos de agua y cobertura vegetal mediante análisis de imágenes satelitales.
           </p>
         </div>
         <Card className="mb-8 p-6 border-0 shadow-sm bg-white">
@@ -1211,10 +1211,10 @@ export default function PhotoAnalyzer() {
                   <div className="flex flex-col items-center flex-1">
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
-                          ? "bg-blue-600 text-white"
-                          : isActive
-                            ? "bg-blue-100 text-blue-600 ring-4 ring-blue-100"
-                            : "bg-slate-100 text-slate-400"
+                        ? "bg-blue-600 text-white"
+                        : isActive
+                          ? "bg-blue-100 text-blue-600 ring-4 ring-blue-100"
+                          : "bg-slate-100 text-slate-400"
                         }`}
                     >
                       {isCompleted ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}

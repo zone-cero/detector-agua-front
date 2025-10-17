@@ -92,38 +92,41 @@ const dashboardOptions: {
   }
 ]
 
-const toolsData: ToolFeature[] = [
+const toolsData = [
   {
-    icon: Database,
-    title: "Histórico y Tendencias",
-    description: "Consulta más de 5 años de datos. Analiza patrones temporales y proyecciones de impacto.",
-    stats: ["5 años de datos", "2.4M registros", "Proyecciones de impacto"],
-    gradient: "from-slate-700 to-slate-800",
-    section: "dashboard",
-    view: DashboardView.Map,
-    accentColor: "blue",
+    title: 'Cuantificación de Agua y Vegetación',
+    description: 'Ejecuta la IA para medir el área (m²) y porcentaje de agua y cobertura vegetal en tus imágenes.',
+    section: 'analisis',
+    view: 'cuantificacion',
+    stats: [
+      'Análisis por Imagen',
+      'Resultado en m² y porcentaje (%)',
+    
+    ],
   },
   {
-    icon: TrendingUp,
-    title: "Modelos Predictivos",
-    description: "Modelos de IA predictivos con alta precisión. Genera alertas tempranas sobre riesgos.",
-    stats: ["94.2% precisión", "Alertas tempranas", "ML optimizado"],
-    gradient: "from-slate-600 to-slate-700",
-    section: "tools",
-    view: null,
-    accentColor: "blue",
+    title: 'Monitoreo Histórico y Comparativas',
+    description: 'Revisa métricas pasadas y compara automáticamente las tendencias de cambio entre capturas.',
+    section: 'historial',
+    view: 'comparativa',
+    stats: [
+      'Historial de Capturas por Ecosistema',
+      'Cálculo automático de Δ (Cambio) vs. captura anterior',
+      'Indicadores visuales de aumento o disminución',
+    ],
   },
   {
-    icon: ImageIcon,
-    title: "Cuantificación de Cobertura",
-    description: "Detección y cuantificación automática de áreas de agua/vegetación mediante visión por computadora.",
-    stats: ["Procesamiento IA", "Resultados en segundos", "Múltiples formatos"],
-    gradient: "from-slate-800 to-slate-900",
-    section: "dashboard",
-    view: DashboardView.PhotoAnalyzer,
-    accentColor: "blue",
+    title: 'Gestión de Ecosistemas y Metadata',
+    description: 'Configura el cuerpo de agua a monitorear y asegura la calidad del registro de cada captura.',
+    section: 'configuracion',
+    view: 'metadata',
+    stats: [
+      'Creación o selección de Ecosistemas (Cuerpos de Agua)',
+      'Ajuste de Fecha y hora de Captura',
+      'Campo de Descripción para contexto adicional',
+    ],
   },
-]
+];
 
 // Componente DashboardTabIcon
 interface DashboardTabIconProps {
@@ -384,66 +387,60 @@ const HomePage: React.FC = () => {
             HERRAMIENTAS ESPECIALIZADAS
             ========================================
         */}
-        <section id="tools" ref={toolsRef} className="py-24 bg-slate-50/50">
-          <div className="max-w-7xl mx-auto px-6">
-            <motion.div
-              className="mb-16"
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              viewport={{ once: true, amount: 0.2 }}
-            >
-              <h2 className="text-[44px] font-normal text-slate-900 mb-4 tracking-tight leading-tight">
+       <section id="tools" ref={toolsRef} className="py-24 bg-slate-50/50">
+    <div className="max-w-7xl mx-auto px-6">
+        <motion.div
+            className="mb-16"
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+        >
+            <h2 className="text-[44px] font-normal text-slate-900 mb-4 tracking-tight leading-tight">
                 Módulos de Análisis
-              </h2>
-              <p className="text-[17px] text-slate-600 max-w-2xl font-normal leading-relaxed">
+            </h2>
+            <p className="text-[17px] text-slate-600 max-w-2xl font-normal leading-relaxed">
                 Capacidades especializadas para la toma de decisiones estratégicas en conservación
-              </p>
-            </motion.div>
-  
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
-              initial="initial"
-              whileInView="animate"
-              variants={stagger}
-              viewport={{ once: true, amount: 0.2 }}
-            >
-              {toolsData.map((feature, index) => (
+            </p>
+        </motion.div>
+
+        <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            initial="initial"
+            whileInView="animate"
+            variants={stagger}
+            viewport={{ once: true, amount: 0.2 }}
+        >
+            {toolsData.map((feature, index) => (
                 <motion.div key={index} variants={fadeInUp}>
-                  <Card
-                    className="p-7 h-full group cursor-pointer transition-all duration-200 bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 rounded-xl"
-                    onClick={() => handleNavigation(feature.section, feature.view)}
-                  >
-                  
-  
-                    <h3 className="text-[22px] font-medium text-slate-900 mb-3 tracking-tight leading-snug">
-                      {feature.title}
-                    </h3>
-                    <p className="text-[15px] text-slate-600 mb-6 leading-relaxed">{feature.description}</p>
-  
-                    <div className="space-y-2.5 mb-6">
-                      {feature.stats.map((stat, i) => (
-                        <div key={i} className="flex items-center text-[14px] text-slate-700">
-                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-3 flex-shrink-0" />
-                          <span className="font-normal">{stat}</span>
-                        </div>
-                      ))}
-                    </div>
-  
-                    <Button
-                      variant="ghost"
-                      className="w-full h-11 text-[15px] text-blue-600 hover:text-blue-600 hover:bg-blue-50 font-medium transition-colors border border-slate-200 hover:border-blue-200 rounded-lg"
+                    <Card
+                        // CLASES MODIFICADAS: Eliminados 'cursor-pointer' y 'hover:shadow-md'
+                        className="p-7 h-full group transition-all duration-200 bg-white border border-slate-200 shadow-sm rounded-xl"
+                        // LÓGICA ELIMINADA: Removido onClick
                     >
-                      Acceder
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
-                    </Button>
-                  </Card>
+                        
+                        <h3 className="text-[22px] font-medium text-slate-900 mb-3 tracking-tight leading-snug">
+                            {feature.title}
+                        </h3>
+                        <p className="text-[15px] text-slate-600 mb-6 leading-relaxed">{feature.description}</p>
+
+                        <div className="space-y-2.5 mb-6">
+                            {feature.stats.map((stat, i) => (
+                                <div key={i} className="flex items-center text-[14px] text-slate-700">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-3 flex-shrink-0" />
+                                    <span className="font-normal">{stat}</span>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {/* BOTÓN ELIMINADO: Se removió todo el componente Button y su contenido. */}
+
+                    </Card>
                 </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-  
+            ))}
+        </motion.div>
+    </div>
+</section>
         {/* Footer */}
         <Footer />
       </div>
