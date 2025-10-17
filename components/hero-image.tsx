@@ -1,22 +1,24 @@
 'use client'
 
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { Eye, ArrowRight } from 'lucide-react' // Solo mantenemos los iconos de los botones principales
+import { Eye, ArrowRight } from 'lucide-react'
 import { Button } from './ui/button'
-import { useRef } from 'react'
-
-// Se eliminaron: Droplets, TrendingUp, BarChart3, Image (iconos de las tarjetas)
-// Se eliminó: Card (componente de las tarjetas)
+import { useRef, useState, useEffect } from 'react'
 
 const stagger = {
-  animate: { transition: { staggerChildren: 0.1 } }
-}
+  animate: {
+    transition: {
+      staggerChildren: 0.04,
+    },
+  },
+};
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 40 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
-}
-
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  // CAMBIO CLAVE: Aumentar la duración a 1.0 segundos para que sea lento
+  transition: { duration: 5.0, ease: [0.4, 0, 0.5, 1] }, 
+};
 export function HeroImage() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({
@@ -24,19 +26,62 @@ export function HeroImage() {
     offset: ['start end', 'end start']
   })
 
-  // Ajusta estos valores para controlar la intensidad del paralaje
+  // Estado para la posición del cursor
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [isHoveringButton, setIsHoveringButton] = useState(false)
+
+  // Efecto para seguir el cursor
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+    }
+  }, [])
+
   const yBackground = useTransform(scrollYProgress, [0, 1], ['-20%', '20%'])
   const yMap = useTransform(scrollYProgress, [0, 1], ['10%', '-10%'])
-  // Se eliminaron las variables yCardX ya que las tarjetas han sido eliminadas.
 
-  // Función para redirigir a la sección del analizador de fotos
   const handleRedirectToAnalyzer = () => {
-    // Tanto Explorar Datos como Ver Demostración ahora redirigen aquí
     window.location.href = '/#photo-analyzer'
   }
 
   return (
     <section ref={ref} className="pt-20 pb-0 px-6 relative overflow-hidden">
+      {/* Bolita que sigue el cursor */}
+      <motion.div
+        className="fixed pointer-events-none z-50 mix-blend-difference"
+        animate={{
+          x: mousePosition.x - 15, // Centrar la bolita
+          y: mousePosition.y - 15,
+          scale: isHoveringButton ? 1.5 : 1, // Efecto al hacer hover en botones
+        }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 500, 
+          damping: 28,
+          mass: 0.5
+        }}
+      >
+        <div className={`w-8 h-8 rounded-full ${
+          isHoveringButton 
+            ? 'bg-purple-400 blur-[1px]' 
+            : 'bg-gradient-to-br from-purple-500 to-pink-500'
+        } transition-all duration-300 ${
+          isHoveringButton ? 'opacity-80' : 'opacity-60'
+        } shadow-lg`} />
+        
+        {/* Efecto de resplandor */}
+        <div className={`absolute inset-0 rounded-full ${
+          isHoveringButton 
+            ? 'bg-purple-300 animate-pulse' 
+            : 'bg-purple-400'
+        } blur-md opacity-30 -z-10 transition-all duration-300`} />
+      </motion.div>
+
       {/* Background Elements con Paralaje */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-slate-50/30"
@@ -63,8 +108,6 @@ export function HeroImage() {
             <div className="space-y-3">
               <div className="absolute left-32 top-20 w-80 h-80 rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-"></div>
               <h1 className="text-7xl lg:text-6xl font-light text-slate-900 leading-tight relative">
-                {/* Gradiente de fondo con blur */}
-
                 <span className="block font-semibold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent relative z-1">
                   Sistema de Gestión
                 </span>
@@ -82,52 +125,43 @@ export function HeroImage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-5">
-              {/* ======================================
-    1. Botón "Explorar Datos" (Gris) - Fondo fijo transparente
-    ======================================
-  */}
+              {/* Botón Explorar Datos */}
               <Button
-                // CLASES BASE: Fondo transparente, borde y texto gris.
                 className="bg-transparent text-gray-600 border border-gray-600 
                transition ease-in-out duration-300 hover:bg-transparent"
                 size="lg"
                 onClick={handleRedirectToAnalyzer}
-
-                // Efecto de sombra/borde grueso solo en la parte inferior al hacer hover.
-                onMouseEnter={e => {
-                  e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(75, 85, 99)'; // Gris-600
-                  e.currentTarget.style.transform = 'translateY(-3px)'; // Mueve el botón hacia arriba
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(75, 85, 99)';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  setIsHoveringButton(true);
                 }}
-                onMouseLeave={e => {
+                onMouseLeave={(e) => {
                   e.currentTarget.style.boxShadow = 'none';
                   e.currentTarget.style.transform = 'translateY(0)';
+                  setIsHoveringButton(false);
                 }}
               >
                 <Eye className="w-5 h-5 mr-2" />
                 Explorar Datos
               </Button>
 
-              {/* ======================================
-    2. Botón "Ver Demostración" (Rojo/Vinotinto) - Fondo fijo transparente
-    ======================================
-  */}
+              {/* Botón Ver Demostración */}
               <Button
-                // CLASES BASE: Fondo transparente, borde y texto rojo.
-                // **Ajuste:** Agregamos `hover:bg-transparent` si la variante "secondary" tiene un hover:bg-* por defecto.
                 className="bg-transparent text-red-700 border border-red-700 
                transition ease-in-out duration-300 hover:bg-transparent"
                 variant="secondary"
                 size="lg"
                 onClick={handleRedirectToAnalyzer}
-
-                // Efecto de sombra/borde grueso solo en la parte inferior al hacer hover.
-                onMouseEnter={e => {
-                  e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(185, 28, 28)'; // Rojo-700
-                  e.currentTarget.style.transform = 'translateY(-3px)'; // Mueve el botón hacia arriba
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(185, 28, 28)';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  setIsHoveringButton(true);
                 }}
-                onMouseLeave={e => {
+                onMouseLeave={(e) => {
                   e.currentTarget.style.boxShadow = 'none';
                   e.currentTarget.style.transform = 'translateY(0)';
+                  setIsHoveringButton(false);
                 }}
               >
                 Ver Demostración
@@ -141,11 +175,10 @@ export function HeroImage() {
             className="relative p-8"
             variants={fadeInUp}
           >
-            {/* Mapa de Hidalgo como imagen principal */}
             <motion.div
-              className="relative z-10 w-full rounded-xl overflow-hidden "
+              className="relative z-10 w-full rounded-xl overflow-hidden"
               style={{
-                y: yMap, // Aplicar paralaje
+                y: yMap,
               }}
             >
               <img
@@ -154,9 +187,6 @@ export function HeroImage() {
                 className="w-full h-auto object-cover opacity-100"
               />
             </motion.div>
-
-            {/* Se eliminó todo el bloque de las tarjetas y el grid de la derecha */}
-
           </motion.div>
         </motion.div>
       </div>

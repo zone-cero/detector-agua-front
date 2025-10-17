@@ -75,13 +75,7 @@ const dashboardOptions: {
   lucideIcon: React.ElementType 
   imageBaseName: "ubicacion" | "monitor" 
 }[] = [
-  {
-    id: DashboardView.Map,
-    title: "Visualizador Geoespacial",
-    description: "Explora datos en tiempo real con mapas interactivos",
-    lucideIcon: Map,
-    imageBaseName: "ubicacion",
-  },
+  
   {
     id: DashboardView.PhotoAnalyzer,
     title: "Análisis de Imágenes",
@@ -89,6 +83,13 @@ const dashboardOptions: {
     lucideIcon: Sparkles,
     imageBaseName: "monitor",
   },
+  {
+    id: DashboardView.Map,
+    title: "Visualizador Geoespacial",
+    description: "Explora datos en tiempo real con mapas interactivos",
+    lucideIcon: Map,
+    imageBaseName: "ubicacion",
+  }
 ]
 
 const toolsData: ToolFeature[] = [
@@ -163,7 +164,7 @@ const DashboardTabIcon: React.FC<DashboardTabIconProps> = ({
       <Image
         src={`${ICON_PATH}${imageBaseName}.gif`}
         alt={`${imageBaseName} animated icon`}
-        width={56} 
+        width={56}
         height={56} 
         className={`absolute transition-all duration-300 ${showGif ? "opacity-100" : "opacity-0"}`}
         style={{ objectFit: "contain" }}
@@ -176,7 +177,7 @@ const DashboardTabIcon: React.FC<DashboardTabIconProps> = ({
 // --- COMPONENTE PRINCIPAL CORREGIDO ---
 
 const HomePage: React.FC = () => { 
-    const [currentView, setCurrentView] = useState<DashboardView>(DashboardView.Map)
+    const [currentView, setCurrentView] = useState<DashboardView>(DashboardView.PhotoAnalyzer)
     const [isLoadingView, setIsLoadingView] = useState(false)
     const [isClient, setIsClient] = useState(false) // 🆕 Estado para detectar cliente
     const integratedDashboardRef = useRef<HTMLDivElement>(null)
@@ -413,10 +414,7 @@ const HomePage: React.FC = () => {
                     className="p-7 h-full group cursor-pointer transition-all duration-200 bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 rounded-xl"
                     onClick={() => handleNavigation(feature.section, feature.view)}
                   >
-                    {/* Se añade el ícono de Lucide */}
-                    <div className="mb-4 w-11 h-11 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 transition-all duration-300 group-hover:bg-blue-200/80">
-                      <feature.icon className="w-6 h-6" />
-                    </div>
+                  
   
                     <h3 className="text-[22px] font-medium text-slate-900 mb-3 tracking-tight leading-snug">
                       {feature.title}

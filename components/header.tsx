@@ -55,13 +55,15 @@ export function Header() {
                   />
                 </div>
               </Link>
+{/*               
+               { href: "/prediccion", label: "Predicción" },
+                  { href: "/analisis", label: "Análisis" }, */}
 
               <nav className="hidden md:flex items-center space-x-8">
                 {[
                   { href: "/", label: "Inicio" },
                   { href: "/historico", label: "Histórico" },
-                  { href: "/prediccion", label: "Predicción" },
-                  { href: "/analisis", label: "Análisis" },
+                 
                 ].map((item) => (
                   <Link
                     key={item.href}
