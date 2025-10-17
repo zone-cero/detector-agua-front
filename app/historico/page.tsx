@@ -238,16 +238,7 @@ export default function HistoricoPage() {
                       <span className="text-sm font-medium text-blue-600">{processedData.avgWater}%</span>
                     </div>
                   </div>
-                  {/* Índice de Salud General - Eliminada referencia a IA y ajustada descripción */}
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm">Estado General del Ecosistema</p>
-                      <p className="text-xs text-muted-foreground">Indicador de tendencia</p>
-                    </div>
-                    <Badge variant="default" className="bg-purple-600 hover:bg-purple-700"> {/* Ajuste de color para contraste */}
-                      85% Estable
-                    </Badge> {/* Texto más neutral */}
-                  </div>
+                 
                 </div>
                 <Link href="/historico/tendencias">
                   <Button className="w-full">Revisar Tendencias y Comparativas</Button> {/* Texto más formal */}

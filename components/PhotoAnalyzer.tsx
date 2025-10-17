@@ -1052,9 +1052,7 @@ export default function PhotoAnalyzer() {
     if (!ecosystemName.trim()) {
       return "El nombre del cuerpo de agua (ecosistema) es requerido."
     }
-    if (!ecosystemId) {
-      return "Por favor, selecciona un ecosistema existente o elige 'Crear nuevo'."
-    }
+    
     const missingDates = captureDates.some((date) => !date)
     if (missingDates) {
       return "Todas las imágenes deben tener una fecha de captura."
@@ -1340,7 +1338,12 @@ export default function PhotoAnalyzer() {
                   <>
                     <Button
                       onClick={() => handleAnalyze()}
-                      disabled={selectedFiles.length === 0 || loadingHistory || !ecosystemId || !ecosystemName.trim()}
+                      disabled={
+                        selectedFiles.length === 0 ||
+                        loadingHistory ||
+                        // Lógica corregida: Deshabilitar solo si NO hay ID Y el nombre está vacío
+                        !((ecosystemId && ecosystemId.trim()) || ecosystemName.trim())
+                      }
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11 text-[14px] font-medium rounded-lg shadow-sm"
                     >
                       {loadingHistory ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Iniciar Análisis"}
