@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { MapContainer, TileLayer, FeatureGroup, useMap, LayersControl, Marker, Popup } from "react-leaflet"
+import { MapContainer, TileLayer, FeatureGroup, useMap, LayersControl, Marker, Popup, Polygon } from "react-leaflet"
 import { EditControl } from "react-leaflet-draw"
 import L from "leaflet"
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch"
@@ -10,28 +10,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import {
-  Download,
-  Save,
-  MapPin,
-  Navigation,
-  Minimize2,
-  Maximize2,
-  History,
-  BarChart3,
-  Calendar,
-  X,
-  ChevronLeft,
-  AlertTriangle,
-  CheckCircle,
-} from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import dynamic from "next/dynamic"
+import { Navigation, Minimize2, Maximize2, X, Clock, Calendar, Eye, Leaf, Droplets } from "lucide-react"
 import toast from "react-hot-toast"
 
 import "leaflet/dist/leaflet.css"
 import "leaflet-draw/dist/leaflet.draw.css"
 import "leaflet-geosearch/dist/geosearch.css"
 
-// Corrige íconos rotos de Leaflet en React
+// Fix broken Leaflet icons in React
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -40,528 +29,498 @@ L.Icon.Default.mergeOptions({
 })
 
 const ReferenceIcon = new L.Icon({
-  iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconSize: [32, 32],
   iconAnchor: [16, 32],
   popupAnchor: [0, -32],
 })
 
 // Interfaces
+interface Ecosystem {
+  id: number
+  name: string
+  location: string
+  created_at: string
+}
+
+interface HistoricalImage {
+  id: number
+  ecosystem: number
+  image: string
+  description: string
+  metadata: {
+    resolution_m_per_px: number
+  }
+  capture_date: string
+  vegetation_percentage: number
+  vegetation_area_m2: number
+  water_percentage: number
+  water_area_m2: number
+  is_adjusted: boolean
+  parent_image: number | null
+  adjusted_images: number[]
+}
+
 interface GeoSearchProps {
   onLocationFound: (label: string) => void
 }
 
-interface ClickHandlerProps {
-  isSelecting: boolean
-  onMapClick: (latlng: L.LatLng) => void
-}
-
 interface MapToolsProps {
-  onExport: () => void
-  onSave: () => void
-  onTogglePointSelection: () => void
-  onShowHistory: () => void
-  isSelectingPoint: boolean
+  onAnalyze: () => void
   locationName: string
-  referenceMarker: L.LatLng | null
   drawnItemsCount: number
   isMinimized: boolean
   onToggleMinimize: () => void
-  hasHistory: boolean
+  isEcosystemSelected: boolean
+  ecosystems: Ecosystem[]
+  selectedEcosystem: Ecosystem | null
+  onEcosystemSelect: (ecosystemId: string) => void
+  isLoadingEcosystems: boolean
 }
 
-interface AnalysisRecord {
-  id: string
-  date: string
-  locationName: string
-  coordinates: [number, number]
-  waterPercentage: number
-  vegetationPercentage: number
-  waterArea: number
-  vegetationArea: number
-  turbidity?: number
-  ndvi?: number
-  biodiversity?: number
-}
-
-interface HistoryModalProps {
+// Componente Modal de Historial
+interface HistoryListModalProps {
   isOpen: boolean
   onClose: () => void
-  locationName: string
-  referenceMarker: L.LatLng | null
-  historyData: AnalysisRecord[]
+  historicalImages: HistoricalImage[]
+  ecosystemName: string
+  onViewDetail: (image: HistoricalImage) => void
 }
 
-const generateMockHistory = (locationName: string, coordinates: [number, number]): AnalysisRecord[] => {
-  const baseDate = new Date()
-  const records: AnalysisRecord[] = []
+// Componente Modal de Detalle de Imagen
+interface ImageDetailModalProps {
+  isOpen: boolean
+  onClose: () => void
+  image: HistoricalImage | null
+}
 
-  for (let i = 0; i < 6; i++) {
-    const date = new Date(baseDate)
-    date.setMonth(date.getMonth() - i)
+const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
+  isOpen,
+  onClose,
+  image,
+}) => {
+  if (!image) return null
 
-    // Variación realista en los porcentajes
-    const baseWater = 65 + (Math.random() * 20 - 10)
-    const baseVegetation = 25 + (Math.random() * 15 - 7.5)
-
-    records.push({
-      id: `analysis-${i}`,
-      date: date.toISOString().split("T")[0],
-      locationName,
-      coordinates,
-      waterPercentage: Math.max(0, Math.min(100, baseWater)),
-      vegetationPercentage: Math.max(0, Math.min(100, baseVegetation)),
-      waterArea: Math.round((baseWater / 100) * 10000 + Math.random() * 5000),
-      vegetationArea: Math.round((baseVegetation / 100) * 5000 + Math.random() * 2000),
-      turbidity: Math.round((Math.random() * 50 + 10) * 10) / 10,
-      ndvi: Math.round((Math.random() * 0.6 + 0.2) * 100) / 100,
-      biodiversity: Math.round((Math.random() * 70 + 30) * 10) / 10,
+  const formatDateForDisplay = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
 
-  return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-}
-
-const SimpleChart: React.FC<{ data: AnalysisRecord[] }> = ({ data }) => {
-  const [animated, setAnimated] = useState(false)
-  const maxValue = 100
-  const sortedData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimated(true), 300)
-    return () => clearTimeout(timer)
-  }, [])
-
   return (
-    <div className="w-full h-48 bg-slate-50 rounded-lg p-4 transition-all duration-300 hover:shadow-md border border-slate-200">
-      <div className="text-sm font-semibold mb-3 text-slate-700">Evolución de Cobertura Vegetal</div>
-      <div className="flex items-end justify-between h-32 gap-2">
-        {sortedData.map((record, index) => {
-          const targetHeight = (record.vegetationPercentage / maxValue) * 100
-          const height = animated ? targetHeight : 0
-
-          return (
-            <div
-              key={record.id}
-              className="flex flex-col items-center flex-1 transition-all duration-1000 ease-out"
-              style={{ transitionDelay: `${index * 100}ms` }}
-            >
-              <div
-                className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t transition-all duration-1000 ease-out hover:from-emerald-700 hover:to-emerald-500 cursor-pointer relative group"
-                style={{ height: `${height}%` }}
-              >
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-lg z-10">
-                  {record.vegetationPercentage.toFixed(1)}%
-                </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogTitle className="sr-only">Detalle de Captura - ID: {image.id}</DialogTitle>
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Detalle de Captura - ID: {image.id}
+          </h2>
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg hover:bg-gray-200"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Imagen */}
+            <div className="space-y-4">
+              <div className="bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={image.image || "/placeholder.svg"}
+                  alt={`Captura ${image.id}`}
+                  className="w-full h-64 object-cover"
+                  onError={(e) => {
+                    ;(e.target as HTMLImageElement).onerror = null
+                    ;(e.target as HTMLImageElement).src =
+                      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-image-off"><path d="M10.5 8.5h.01"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9c0-.6.4-1.2.9-1.6L4 4"/></svg>'
+                  }}
+                />
               </div>
-              <div className="text-[10px] text-slate-500 mt-1">
-                {new Date(record.date).toLocaleDateString("es-ES", { month: "short", day: "numeric" })}
+              <div className="text-sm text-gray-600">
+                <p>Haz clic en la imagen para verla en tamaño completo</p>
               </div>
             </div>
-          )
-        })}
-      </div>
-    </div>
+
+            {/* Información */}
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Información de la Captura</h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700">ID de Captura:</span>
+                    <span className="text-sm text-gray-900 font-mono">#{image.id}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700">Fecha de Captura:</span>
+                    <span className="text-sm text-gray-900">{formatDateForDisplay(image.capture_date)}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700">Descripción:</span>
+                    <span className="text-sm text-gray-900 text-right max-w-[200px]">
+                      {image.description || "Sin descripción"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700">Resolución:</span>
+                    <span className="text-sm text-gray-900">
+                      {image.metadata.resolution_m_per_px} m/px
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Leaf className="w-4 h-4 text-green-600" />
+                      Cobertura de Lirio:
+                    </span>
+                    <span className="text-sm font-semibold text-green-700">
+                      {image.vegetation_percentage?.toFixed(2)}%
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Leaf className="w-4 h-4 text-green-600" />
+                      Área de Lirio:
+                    </span>
+                    <span className="text-sm font-semibold text-green-700">
+                      {image.vegetation_area_m2?.toFixed(2)} m²
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Droplets className="w-4 h-4 text-blue-600" />
+                      Cobertura de Agua:
+                    </span>
+                    <span className="text-sm font-semibold text-blue-700">
+                      {image.water_percentage?.toFixed(2)}%
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Droplets className="w-4 h-4 text-blue-600" />
+                      Área de Agua:
+                    </span>
+                    <span className="text-sm font-semibold text-blue-700">
+                      {image.water_area_m2?.toFixed(2)} m²
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium text-gray-700">Estado:</span>
+                    <span className={`text-sm font-semibold ${image.is_adjusted ? 'text-purple-700' : 'text-gray-700'}`}>
+                      {image.is_adjusted ? 'Ajustada' : 'Original'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Estadísticas */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                <h4 className="text-sm font-semibold text-blue-900 mb-3">Resumen de Cobertura</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-blue-700">Lirio Acuático:</span>
+                    <span className="font-semibold text-blue-900">{image.vegetation_percentage?.toFixed(2)}%</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-blue-700">Agua:</span>
+                    <span className="font-semibold text-blue-900">{image.water_percentage?.toFixed(2)}%</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-t border-blue-200 pt-2">
+                    <span className="text-blue-700 font-medium">Total Cobertura:</span>
+                    <span className="font-semibold text-blue-900">
+                      {(image.vegetation_percentage + image.water_percentage).toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Áreas */}
+              <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+                <h4 className="text-sm font-semibold text-green-900 mb-3">Resumen de Áreas</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-700">Área de Lirio:</span>
+                    <span className="font-semibold text-green-900">{image.vegetation_area_m2?.toFixed(2)} m²</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-700">Área de Agua:</span>
+                    <span className="font-semibold text-green-900">{image.water_area_m2?.toFixed(2)} m²</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-t border-green-200 pt-2">
+                    <span className="text-green-700 font-medium">Área Total:</span>
+                    <span className="font-semibold text-green-900">
+                      {(image.vegetation_area_m2 + image.water_area_m2).toFixed(2)} m²
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
-const HistoryModal: React.FC<HistoryModalProps> = ({ isOpen, onClose, locationName, referenceMarker, historyData }) => {
-  const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisRecord | null>(null)
-  const [isClosing, setIsClosing] = useState(false)
+const HistoryListModal: React.FC<HistoryListModalProps> = ({
+  isOpen,
+  onClose,
+  historicalImages,
+  ecosystemName,
+  onViewDetail,
+}) => {
+  const formatDateForDisplay = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
 
-  useEffect(() => {
-    if (historyData.length > 0) {
-      setSelectedAnalysis(historyData[0]) // Selecciona el más reciente por defecto
+  const sortedHistory = [...historicalImages].sort((a, b) => {
+    const dateA = a.capture_date || ""
+    const dateB = b.capture_date || ""
+    return dateB.localeCompare(dateA)
+  })
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogTitle className="sr-only">Historial de Capturas: {ecosystemName}</DialogTitle>
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Historial de Capturas: {ecosystemName}
+          </h2>
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg hover:bg-gray-200"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 border-b pb-4">
+              Mostrando {historicalImages.length} capturas históricas encontradas para el ecosistema "{ecosystemName}".
+              Las imágenes se listan de la más reciente a la más antigua.
+            </p>
+            
+            {sortedHistory.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 border rounded-lg bg-gray-50">
+                <Clock className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium mb-2">No se encontraron imágenes históricas</p>
+                <p className="text-sm">No hay capturas previas para este ecosistema.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {sortedHistory.map((image, index) => (
+                  <div
+                    key={image.id}
+                    className="p-4 flex items-center justify-between border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow bg-white"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden relative">
+                        <img
+                          src={image.image || "/placeholder.svg"}
+                          alt={`Captura ${image.id}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            ;(e.target as HTMLImageElement).onerror = null
+                            ;(e.target as HTMLImageElement).src =
+                              'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-image-off"><path d="M10.5 8.5h.01"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9c0-.6.4-1.2.9-1.6L4 4"/></svg>'
+                          }}
+                        />
+                      </div>
+                      <div className="text-sm">
+                        <div className="font-semibold text-gray-900">
+                          Captura ID: {image.id}
+                          {index === 0 && (
+                            <span className="ml-2 px-2 py-0.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
+                              Reciente
+                            </span>
+                          )}
+                        </div>
+                        <p className="flex items-center text-gray-600 mt-1">
+                          <Calendar className="w-3 h-3 mr-2" />
+                          {formatDateForDisplay(image.capture_date)}
+                        </p>
+                        <p className="flex items-center text-green-700 mt-1">
+                          <Leaf className="w-3 h-3 mr-2" />
+                          Lirio: {image.vegetation_percentage?.toFixed(2)}%
+                        </p>
+                        <p className="flex items-center text-blue-700">
+                          <Droplets className="w-3 h-3 mr-2" />
+                          Agua: {image.water_percentage?.toFixed(2)}%
+                        </p>
+                        {image.description && (
+                          <p className="text-xs text-gray-500 mt-1 max-w-[200px] truncate" title={image.description}>
+                            {image.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => onViewDetail(image)}
+                      variant="outline"
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Detalle
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Parse WKT POLYGON to Leaflet coordinates
+const parseWKTPolygon = (wkt: string): [number, number][] | null => {
+  try {
+    const cleanWkt = wkt.toUpperCase().replace(/SRID=\d+;/, "")
+    const match = cleanWkt.match(/POLYGON\s*\(\((.*?)\)\)/)
+
+    if (!match) {
+      console.error("WKT no tiene el formato esperado POLYGON ((...)): ", wkt)
+      return null
     }
-  }, [historyData])
 
-  const handleClose = useCallback(() => {
-    setIsClosing(true)
-    setTimeout(() => {
-      onClose()
-      setIsClosing(false)
-    }, 200)
-  }, [onClose])
+    const coordsString = match[1]
+    const coords = coordsString.split(",").map((pair) => {
+      const [lng, lat] = pair.trim().split(/\s+/).map(Number)
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        handleClose()
+      if (isNaN(lat) || isNaN(lng)) {
+        throw new Error("Coordenadas no numéricas detectadas.")
+      }
+
+      return [lat, lng] as [number, number]
+    })
+
+    return coords
+  } catch (error) {
+    console.error("Error al parsear WKT:", error)
+    return null
+  }
+}
+
+// Calculate center of polygon
+const getPolygonCenter = (coords: [number, number][]): [number, number] => {
+  const latSum = coords.reduce((sum, coord) => sum + coord[0], 0)
+  const lngSum = coords.reduce((sum, coord) => sum + coord[1], 0)
+  return [latSum / coords.length, lngSum / coords.length]
+}
+
+// Convert Leaflet polygon coordinates to WKT format
+const convertToWKT = (geoJson: any): string | null => {
+  try {
+    const features = geoJson.features || []
+
+    for (const feature of features) {
+      if (feature.geometry.type === "Polygon") {
+        const coordinates = feature.geometry.coordinates[0]
+        const wktCoords = coordinates.map((coord: [number, number]) => `${coord[0]} ${coord[1]}`).join(", ")
+        return `SRID=4326;POLYGON ((${wktCoords}))`
       }
     }
 
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape)
-      document.body.style.overflow = "hidden"
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape)
-      document.body.style.overflow = "unset"
-    }
-  }, [isOpen, handleClose])
-
-  if (!isOpen && !isClosing) return null
-
-  return (
-    // Fondo completamente transparente, z-index [9999]
-    <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-all duration-200 ${
-        isClosing ? "bg-black/0" : "bg-black/40"
-      }`}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          handleClose() // Cierra al hacer clic en el fondo
-        }
-      }}
-    >
-      <div
-        // MODIFICACIÓN: max-w-4xl (más chico) y sombra más fuerte
-        className={`bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden transform transition-all duration-200 ${
-          isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
-        }`}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
-          <div>
-            {/* MODIFICACIÓN: Título más chico (text-xl) */}
-            <h2 className="text-xl font-semibold text-slate-900">Historial de Análisis</h2>
-            <p className="text-sm text-slate-600 mt-0.5">{locationName || "Ubicación sin nombre"}</p>
-            {referenceMarker && (
-              <p className="text-xs text-slate-500 mt-0.5">
-                {referenceMarker.lat.toFixed(5)}, {referenceMarker.lng.toFixed(5)}
-              </p>
-            )}
-          </div>
-          <Button
-            onClick={handleClose}
-            variant="ghost"
-            size="icon"
-            className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 h-[calc(90vh-80px)]">
-          <div className="lg:col-span-2 p-6 border-r border-slate-200 overflow-y-auto bg-slate-50">
-            <div className="mb-6">
-              <SimpleChart data={historyData} />
-            </div>
-
-            <div className="space-y-3">
-              {" "}
-              {/* Espaciado reducido a space-y-3 */}
-              {/* MODIFICACIÓN: Subtítulo más chico (text-lg) */}
-              <h3 className="text-base font-semibold text-slate-800 mb-4">Registros de Análisis</h3>
-              {historyData.map((record) => (
-                <Card
-                  key={record.id}
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                    selectedAnalysis?.id === record.id
-                      ? "ring-2 ring-blue-500 shadow-md bg-blue-50"
-                      : "hover:ring-1 hover:ring-slate-300 bg-white"
-                  }`}
-                  onClick={() => setSelectedAnalysis(record)}
-                >
-                  <CardContent className="p-4">
-                    {" "}
-                    {/* Padding reducido a p-3 */}
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 transition-colors duration-300 group">
-                          <Calendar className="h-4 w-4 text-slate-500" /> {/* Ícono más chico */}
-                          <span className="font-medium text-sm text-slate-900">
-                            {" "}
-                            {/* Texto más chico */}
-                            {new Date(record.date).toLocaleDateString("es-ES", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-xs">
-                          {" "}
-                          {/* Texto y gap más chicos */}
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-2 transition-colors duration-300 hover:text-blue-700">
-                              <div className="w-3 h-3 bg-blue-500 rounded-full transition-all duration-300 hover:scale-125"></div>{" "}
-                              {/* Punto más chico */}
-                              <span className="text-slate-600">
-                                Agua: <strong className="text-slate-900">{record.waterPercentage.toFixed(1)}%</strong>
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 transition-colors duration-300 hover:text-green-700">
-                              <div className="w-3 h-3 bg-emerald-500 rounded-full transition-all duration-300 hover:scale-125"></div>{" "}
-                              {/* Punto más chico */}
-                              <span className="text-slate-600">
-                                Lirio:{" "}
-                                <strong className="text-slate-900">{record.vegetationPercentage.toFixed(1)}%</strong>
-                              </span>
-                            </div>
-                          </div>
-                          <div className="space-y-1.5 text-slate-600 transition-colors duration-300 hover:text-gray-800">
-                            <div>
-                              Área agua:{" "}
-                              <strong className="text-slate-900">{record.waterArea.toLocaleString()} m²</strong>
-                            </div>
-                            <div>
-                              Área Lirio:{" "}
-                              <strong className="text-slate-900">{record.vegetationArea.toLocaleString()} m²</strong>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <Badge variant={record.vegetationPercentage > 30 ? "default" : "destructive"} className="text-xs">
-                        {record.vegetationPercentage > 30 ? "Saludable" : "En riesgo"}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-6 overflow-y-auto bg-white">
-            {" "}
-            {/* Padding reducido a p-4 */}
-            {/* MODIFICACIÓN: Subtítulo más chico (text-lg) */}
-            <h3 className="text-base font-semibold mb-4 text-slate-800">Detalles del Análisis</h3>
-            {selectedAnalysis ? (
-              <div className="space-y-4">
-                {" "}
-                {/* Espaciado reducido a space-y-4 */}
-                <Card className="border-slate-200">
-                  <CardHeader className="bg-slate-50 rounded-t-lg p-4 border-b border-slate-200">
-                    <CardTitle className="text-sm flex items-center gap-2 text-slate-800">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(selectedAnalysis.date).toLocaleDateString("es-ES")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4 pt-4">
-                    {" "}
-                    {/* Padding y espaciado reducidos */}
-                    {/* Porcentajes */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
-                        <div className="text-2xl font-bold text-blue-700">
-                          {" "}
-                          {/* Texto más chico */}
-                          {selectedAnalysis.waterPercentage.toFixed(1)}%
-                        </div>
-                        <div className="text-xs text-blue-600 mt-1">Cobertura de Agua</div> {/* Texto más chico */}
-                      </div>
-                      <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                        <div className="text-2xl font-bold text-emerald-700">
-                          {" "}
-                          {/* Texto más chico */}
-                          {selectedAnalysis.vegetationPercentage.toFixed(1)}%
-                        </div>
-                        <div className="text-xs text-emerald-600 mt-1">Cobertura Vegetal</div> {/* Texto más chico */}
-                      </div>
-                    </div>
-                    {/* Áreas */}
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-sm text-slate-700">Áreas Calculadas</h4>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {" "}
-                        {/* Texto más chico */}
-                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                          <div className="font-medium text-slate-600">Agua</div>
-                          <div className="text-slate-900 font-semibold mt-1">
-                            {selectedAnalysis.waterArea.toLocaleString()} m²
-                          </div>
-                        </div>
-                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                          <div className="font-medium text-slate-600">Lirio</div>
-                          <div className="text-slate-900 font-semibold mt-1">
-                            {selectedAnalysis.vegetationArea.toLocaleString()} m²
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Métricas adicionales */}
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-sm text-slate-700">Métricas de Calidad</h4>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {" "}
-                        {/* Texto más chico */}
-                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                          <div className="font-medium text-slate-600">Turbidez</div>
-                          <div className="text-slate-900 font-semibold mt-1">{selectedAnalysis.turbidity} NTU</div>
-                        </div>
-                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                          <div className="font-medium text-slate-600">Índice NDVI</div>
-                          <div className="text-slate-900 font-semibold mt-1">{selectedAnalysis.ndvi}</div>
-                        </div>
-                        <div className="p-3 bg-slate-50 rounded-lg col-span-2 border border-slate-200">
-                          <div className="font-medium text-slate-600">Biodiversidad</div>
-                          <div className="text-slate-900 font-semibold mt-1">{selectedAnalysis.biodiversity}%</div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Estado de salud */}
-                    <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                      <h4 className="font-semibold mb-2 text-sm text-slate-800">Estado del Ecosistema</h4>
-                      <Badge
-                        variant={selectedAnalysis.vegetationPercentage > 30 ? "default" : "destructive"}
-                        className="text-xs mb-2"
-                      >
-                        {selectedAnalysis.vegetationPercentage > 30 ? (
-                          <span className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" /> Ecosistema saludable
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3" /> Ecosistema en riesgo
-                          </span>
-                        )}
-                      </Badge>
-                      <p className="text-xs text-slate-600 leading-relaxed">
-                        {selectedAnalysis.vegetationPercentage > 30
-                          ? "La cobertura vegetal se mantiene en niveles adecuados para la salud del ecosistema."
-                          : "Se recomienda monitoreo continuo y acciones de conservación."}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <div className="text-center text-slate-400 py-8">
-                {" "}
-                {/* Padding vertical reducido */}
-                <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-50" /> {/* Ícono más chico */}
-                <p className="text-sm text-slate-500">Selecciona un análisis para ver los detalles</p>{" "}
-                {/* Texto más chico */}
-                <ChevronLeft className="h-5 w-5 mx-auto mt-2 animate-pulse text-slate-400" /> {/* Ícono más chico */}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+    return null
+  } catch (error) {
+    console.error("[v0] Error converting to WKT:", error)
+    return null
+  }
 }
 
 const MapTools: React.FC<MapToolsProps> = ({
-  onExport,
-  onSave,
-  onTogglePointSelection,
-  onShowHistory,
-  isSelectingPoint,
+  onAnalyze,
   locationName,
-  referenceMarker,
   drawnItemsCount,
   isMinimized,
   onToggleMinimize,
-  hasHistory,
+  isEcosystemSelected,
+  ecosystems,
+  selectedEcosystem,
+  onEcosystemSelect,
+  isLoadingEcosystems,
 }) => {
-  // Los controles del mapa (L.Control) suelen usar z-index 400 o superior.
-  // Mantenemos las herramientas del mapa en 401 para que estén por encima del mapa base,
-  // pero el modal de historial estará en 9999.
   if (isMinimized) {
     return (
-      <Card className="absolute top-4 right-4 z-[401] w-14 shadow-lg border-slate-200">
-        <CardContent className="p-2">
-          <div className="space-y-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={onToggleMinimize}
-                    size="icon"
-                    variant="ghost"
-                    className="w-full h-10 hover:bg-slate-100"
-                  >
-                    <Maximize2 className="h-4 w-4 text-slate-600" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Expandir herramientas</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+      <Card className="absolute top-4 right-4 z-[401] w-14 shadow-sm border border-gray-200 bg-white rounded-lg">
+        <CardContent className="p-2 space-y-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={onToggleMinimize}
+                  size="icon"
+                  variant="ghost"
+                  className="w-full h-10 hover:bg-gray-100 rounded-lg"
+                >
+                  <Maximize2 className="h-4 w-4 text-gray-600" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">Expandir herramientas</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={onExport}
-                    size="icon"
-                    variant="ghost"
-                    className="w-full h-10 hover:bg-slate-100"
-                    disabled={drawnItemsCount === 0}
-                  >
-                    <Download className="h-4 w-4 text-slate-600" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Exportar GeoJSON</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={onAnalyze}
+                  size="icon"
+                  variant="default"
+                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                  disabled={drawnItemsCount === 0 || locationName === ""}
+                >
+                  <span className="text-xs font-medium">A</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">Analizar polígono</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={onTogglePointSelection}
-                    size="icon"
-                    variant={isSelectingPoint ? "default" : "ghost"}
-                    className={`w-full h-10 ${
-                      isSelectingPoint ? "bg-blue-600 hover:bg-blue-700 text-white" : "hover:bg-slate-100"
-                    }`}
-                  >
-                    <MapPin className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Referenciar Punto</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={onShowHistory}
-                    size="icon"
-                    variant={hasHistory ? "default" : "ghost"}
-                    className={`w-full h-10 ${
-                      hasHistory ? "bg-blue-600 hover:bg-blue-700 text-white" : "hover:bg-slate-100"
-                    }`}
-                    disabled={!hasHistory}
-                  >
-                    <History className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Ver historial</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            {/* Badge de contador en versión minimizada */}
-            {drawnItemsCount > 0 && (
-              <div className="flex justify-center">
-                <Badge variant="default" className="h-6 w-6 p-0 text-xs flex items-center justify-center bg-blue-600">
-                  {drawnItemsCount}
-                </Badge>
-              </div>
-            )}
-          </div>
+          {drawnItemsCount > 0 && (
+            <div className="flex justify-center">
+              <Badge
+                variant="default"
+                className="h-6 w-6 p-0 text-xs flex items-center justify-center bg-blue-600 text-white rounded-full"
+              >
+                {drawnItemsCount}
+              </Badge>
+            </div>
+          )}
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="absolute top-4 right-4 z-[401] w-80 shadow-lg border-slate-200 bg-white">
-      <CardHeader className="pb-3 bg-slate-50 rounded-t-lg border-b border-slate-200">
+    <Card className="absolute top-4 right-4 z-[401] w-80 shadow-sm border border-gray-200 bg-white rounded-lg">
+      <CardHeader className="pb-3 bg-gray-50 rounded-t-lg border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-800">
-            <Navigation className="h-4 w-4" />
+          <CardTitle className="text-sm font-semibold flex items-center gap-2 text-gray-800">
+            <Navigation className="h-4 w-4 text-gray-600" />
             Herramientas del Mapa
           </CardTitle>
           <TooltipProvider>
@@ -571,152 +530,136 @@ const MapTools: React.FC<MapToolsProps> = ({
                   onClick={onToggleMinimize}
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 hover:bg-slate-200 rounded-full"
+                  className="h-8 w-8 hover:bg-gray-100 rounded-lg"
                 >
-                  <Minimize2 className="h-4 w-4 text-slate-600" />
+                  <Minimize2 className="h-4 w-4 text-gray-600" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Minimizar herramientas</p>
-              </TooltipContent>
+              <TooltipContent>Minimizar panel</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 p-4">
-        {/* Información de ubicación */}
-        {(locationName || referenceMarker) && (
+
+      <CardContent className="space-y-4 p-4">
+        {/* Sección de Selección de Ecosistema */}
+        <div className="space-y-3">
+          <div className="text-sm font-medium text-gray-700">Seleccionar Ecosistema</div>
+          <Select
+            onValueChange={onEcosystemSelect}
+            disabled={isLoadingEcosystems}
+            value={selectedEcosystem?.id.toString() || "none"}
+          >
+            <SelectTrigger className="w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+              <SelectValue placeholder={isLoadingEcosystems ? "Cargando..." : "Selecciona un ecosistema"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">(Ningún ecosistema - Modo Análisis)</SelectItem>
+              {ecosystems.map((ecosystem) => (
+                <SelectItem key={ecosystem.id} value={ecosystem.id.toString()}>
+                  {ecosystem.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {selectedEcosystem && (
+            <div className="text-xs text-gray-600 space-y-1 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div>
+                <span className="font-medium">ID:</span> {selectedEcosystem.id}
+              </div>
+              <div>
+                <span className="font-medium">Creado:</span>{" "}
+                {new Date(selectedEcosystem.created_at).toLocaleDateString("es-ES")}
+              </div>
+              {selectedEcosystem.location && selectedEcosystem.location.trim() !== "" ? (
+                <div className="text-green-600 font-medium">Con coordenadas</div>
+              ) : (
+                <div className="text-amber-600 font-medium">Sin coordenadas</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Información de Ubicación */}
+        {locationName && (
           <div className="text-xs space-y-1 p-3 bg-blue-50 rounded-lg border border-blue-100">
-            <div className="font-medium text-slate-700">Ubicación seleccionada:</div>
-            {locationName && (
-              <div className="text-slate-900 font-semibold truncate" title={locationName}>
-                {locationName}
-              </div>
-            )}
-            {referenceMarker && (
-              <div className="text-slate-600 font-mono text-[11px]">
-                {referenceMarker.lat.toFixed(5)}, {referenceMarker.lng.toFixed(5)}
-              </div>
-            )}
+            <div className="font-medium text-gray-700">Ubicación seleccionada</div>
+            <div className="text-gray-900 font-medium truncate" title={locationName}>
+              {locationName}
+            </div>
           </div>
         )}
 
-        {/* Contador de elementos dibujados */}
+        {/* Contador de Elementos */}
         <div className="flex items-center justify-between text-xs px-1">
-          <span className="text-slate-600">Elementos dibujados:</span>
+          <span className="text-gray-600">Elementos dibujados</span>
           <Badge variant={drawnItemsCount > 0 ? "default" : "secondary"} className="bg-blue-600">
             {drawnItemsCount}
           </Badge>
         </div>
 
-        {/* Botones de acción */}
-        <div className="grid grid-cols-2 gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={onExport}
-                  size="sm"
-                  variant="outline"
-                  className="w-full border-slate-300 hover:bg-slate-50 bg-transparent"
-                  disabled={drawnItemsCount === 0}
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Exportar
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Descargar GeoJSON</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={onSave}
-                  size="sm"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                  disabled={drawnItemsCount === 0}
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  Guardar
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Guardar datos</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          {/* Botón de selección de punto */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={onTogglePointSelection}
-                  size="sm"
-                  variant={isSelectingPoint ? "default" : "outline"}
-                  className={`w-full ${
-                    isSelectingPoint ? "bg-blue-600 hover:bg-blue-700 text-white" : "border-slate-300 hover:bg-slate-50"
-                  }`}
-                >
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {isSelectingPoint ? "Seleccionando..." : "Referenciar"}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Haz clic en el mapa para obtener referencia</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* Botón de historial */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={onShowHistory}
-                  size="sm"
-                  variant={hasHistory ? "default" : "outline"}
-                  className={`w-full ${
-                    hasHistory ? "bg-blue-600 hover:bg-blue-700 text-white" : "border-slate-300 hover:bg-slate-50"
-                  }`}
-                  disabled={!hasHistory}
-                >
-                  <History className="h-4 w-4 mr-1" />
-                  Historial
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Ver historial de análisis</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        {/* Botón de Análisis */}
+        <Button
+          onClick={onAnalyze}
+          size="sm"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+          disabled={drawnItemsCount === 0 || locationName === ""}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4 mr-2"
+          >
+            <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
+            <path d="M9 17v-7a3 3 0 0 1 6 0v7" />
+            <path d="M12 10V7" />
+          </svg>
+          Analizar
+        </Button>
 
         {/* Instrucciones */}
-        <div className="text-xs text-slate-600 pt-3 border-t border-slate-200">
-          <div className="font-medium mb-2 text-slate-700">Instrucciones:</div>
-          <ul className="space-y-1.5 text-slate-600">
+        <div className="text-xs text-gray-600 pt-3 border-t border-gray-200">
+          <div className="font-medium mb-2 text-gray-700">Instrucciones</div>
+          <ul className="space-y-1.5 text-gray-600">
+            {isEcosystemSelected ? (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span>Ecosistema seleccionado</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span>Dibuja polígonos con herramientas</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span>Presiona el botón Analizar</span>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span>Busca el nombre del lugar</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span>Selecciona con el polígono el área</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span>Presiona el botón Analizar</span>
+                </li>
+              </>
+            )}
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-0.5">•</span>
-              <span>Usa el buscador para ubicaciones</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 mt-0.5">•</span>
-              <span>Dibuja polígonos con herramientas</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 mt-0.5">•</span>
-              <span>Referencia puntos con el botón</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 mt-0.5">•</span>
-              <span>Consulta el historial de análisis</span>
+              <span>Usa las herramientas de dibujo para crear polígonos</span>
             </li>
           </ul>
         </div>
@@ -725,7 +668,6 @@ const MapTools: React.FC<MapToolsProps> = ({
   )
 }
 
-// Componente para el control de búsqueda
 const GeoSearch: React.FC<GeoSearchProps> = ({ onLocationFound }) => {
   const map = useMap()
 
@@ -745,7 +687,6 @@ const GeoSearch: React.FC<GeoSearchProps> = ({ onLocationFound }) => {
     const handleLocationFound = (result: any) => {
       if (result.location && result.location.label) {
         onLocationFound(result.location.label)
-        // Opcional: Centrar el mapa en el resultado de la búsqueda
         map.flyTo([result.location.y, result.location.x], 13)
       }
     }
@@ -761,45 +702,15 @@ const GeoSearch: React.FC<GeoSearchProps> = ({ onLocationFound }) => {
   return null
 }
 
-// Componente para manejar clics en el mapa
-const ClickHandler: React.FC<ClickHandlerProps> = ({ isSelecting, onMapClick }) => {
-  const map = useMap()
-
-  useEffect(() => {
-    // Si isSelecting es true, el cursor cambia
-    map.getContainer().style.cursor = isSelecting ? "crosshair" : "grab" // CAMBIO: Usar 'grab' para más seguridad y consistencia
-
-    if (isSelecting) {
-      const handler = (e: L.LeafletMouseEvent) => {
-        onMapClick(e.latlng)
-        map.getContainer().style.cursor = "grab" // Restaura el cursor después del clic
-      }
-      map.on("click", handler)
-
-      return () => {
-        map.off("click", handler)
-      }
-    }
-    // Asegura que el cursor se restablezca si se detiene la selección de puntos de otra manera
-    return () => {
-      map.getContainer().style.cursor = "grab"
-    }
-  }, [isSelecting, map, onMapClick])
-
-  return null
-}
-
-// Componente para la configuración de EditControl
-const DrawControl: React.FC<{ featureGroupRef: React.RefObject<L.FeatureGroup> }> = ({ featureGroupRef }) => {
-  // const map = useMap(); // No se usa `map` aquí directamente
-
+const DrawControl: React.FC<{ featureGroupRef: React.RefObject<L.FeatureGroup>; onCountUpdate: () => void }> = ({
+  featureGroupRef,
+  onCountUpdate,
+}) => {
   const _onCreated = (e: any) => {
     const { layerType } = e
-    // Agrega la capa al FeatureGroup
     if (featureGroupRef.current) {
       featureGroupRef.current.addLayer(e.layer)
-
-      // Opcional: Notificación
+      onCountUpdate()
       toast.success(`Se ha dibujado un ${layerType}`, {
         icon: "🗺️",
       })
@@ -807,10 +718,14 @@ const DrawControl: React.FC<{ featureGroupRef: React.RefObject<L.FeatureGroup> }
   }
 
   const _onDeleted = (e: any) => {
-    // Opcional: Notificación
+    onCountUpdate()
     toast.error(`${Object.keys(e.layers._layers).length} elemento(s) eliminado(s)`, {
       icon: "🗑️",
     })
+  }
+
+  const _onEdited = (e: any) => {
+    onCountUpdate()
   }
 
   return (
@@ -819,19 +734,18 @@ const DrawControl: React.FC<{ featureGroupRef: React.RefObject<L.FeatureGroup> }
         position="topleft"
         onCreated={_onCreated}
         onDeleted={_onDeleted}
+        onEdited={_onEdited}
         draw={{
-          polyline: {
-            shapeOptions: { color: "#3b82f6" }, // Tailwind blue-500
-          },
+          polyline: false,
           polygon: {
             allowIntersection: false,
             shapeOptions: { color: "#3b82f6" },
           },
-          circle: true,
+          circle: false,
           rectangle: {
             shapeOptions: { color: "#3b82f6" },
           },
-          marker: true,
+          marker: false,
           circlemarker: false,
         }}
         edit={{
@@ -843,28 +757,227 @@ const DrawControl: React.FC<{ featureGroupRef: React.RefObject<L.FeatureGroup> }
   )
 }
 
-const MapComponent: React.FC = () => {
+const MapViewController: React.FC<{ center: [number, number] | null; zoom: number }> = ({ center, zoom }) => {
+  const map = useMap()
+
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, zoom, { duration: 1.5 })
+    }
+  }, [center, zoom, map])
+
+  return null
+}
+
+// PhotoAnalyzer seguro con estructura de datos corregida
+const PhotoAnalyzer = dynamic(() => import("@/components/photo-analyzer").then(mod => {
+  // Función wrapper para asegurar la estructura de datos y manejar errores
+  const SafePhotoAnalyzer = (props: any) => {
+    // Asegurar que polygonData tenga la estructura correcta
+    const safePolygonData = props.polygonData ? {
+      ...props.polygonData,
+      // Garantizar que analysisResult.images exista
+      analysisResult: {
+        images: props.polygonData.analysisResult?.images || []
+      }
+    } : {
+      // Si no hay polygonData, crear estructura vacía
+      geoJson: null,
+      locationName: "",
+      location: "",
+      drawnItemsCount: 0,
+      analysisResult: {
+        images: []
+      }
+    };
+
+    const Component = mod.default || mod;
+    return <Component {...props} polygonData={safePolygonData} />;
+  };
+  
+  return SafePhotoAnalyzer;
+}), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Cargando formulario...</p>
+      </div>
+    </div>
+  ),
+})
+
+interface MapComponentProps {
+  onAnalyze?: (data: any) => void
+}
+
+const MapComponent: React.FC<MapComponentProps> = ({ onAnalyze }) => {
+  const [ecosystems, setEcosystems] = useState<Ecosystem[]>([])
+  const [selectedEcosystem, setSelectedEcosystem] = useState<Ecosystem | null>(null)
+  const [selectedPolygonCoords, setSelectedPolygonCoords] = useState<[number, number][] | null>(null)
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null)
+  const [isLoadingEcosystems, setIsLoadingEcosystems] = useState(true)
+  const [geocodedMarker, setGeocodedMarker] = useState<[number, number] | null>(null)
+
   const [locationName, setLocationName] = useState("")
-  const [referenceMarker, setReferenceMarker] = useState<L.LatLng | null>(null)
-  const [isSelectingPoint, setIsSelectingPoint] = useState(false)
   const [drawnItemsCount, setDrawnItemsCount] = useState(0)
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const featureGroupRef = useRef<L.FeatureGroup>(null)
-  const [historyData, setHistoryData] = useState<AnalysisRecord[]>([])
 
-  // Efecto para simular la carga del historial al establecer la referencia
-  useEffect(() => {
-    if (referenceMarker) {
-      const mockData = generateMockHistory(locationName || "Punto de Referencia", [
-        referenceMarker.lat,
-        referenceMarker.lng,
-      ])
-      setHistoryData(mockData)
-    } else {
-      setHistoryData([])
+  const [isAnalyzerModalOpen, setIsAnalyzerModalOpen] = useState(false)
+  const [polygonDataForAnalysis, setPolygonDataForAnalysis] = useState<any>(null)
+
+  // Estados para el historial
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
+  const [isImageDetailModalOpen, setIsImageDetailModalOpen] = useState(false)
+  const [selectedEcosystemForHistory, setSelectedEcosystemForHistory] = useState<Ecosystem | null>(null)
+  const [historicalImages, setHistoricalImages] = useState<HistoricalImage[]>([])
+  const [selectedImage, setSelectedImage] = useState<HistoricalImage | null>(null)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+
+  // Función para cargar todas las imágenes desde la API y filtrar por ecosistema
+  const fetchAllImages = async (): Promise<HistoricalImage[]> => {
+    try {
+      setIsLoadingHistory(true)
+      const response = await fetch(`https://sistemahidalgodroneva.site/api/monitoring/images/`)
+      
+      if (!response.ok) {
+        throw new Error(`Error al cargar imágenes: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error fetching all images:', error)
+      throw error
+    } finally {
+      setIsLoadingHistory(false)
     }
-  }, [referenceMarker, locationName])
+  }
+
+  // Función para manejar el clic en "Ver Historial"
+  const handleViewHistory = async (ecosystemId: number) => {
+    try {
+      const ecosystem = ecosystems.find((eco) => eco.id === ecosystemId)
+      if (!ecosystem) return
+
+      setSelectedEcosystemForHistory(ecosystem)
+      
+      // Cargar todas las imágenes y filtrar por el ecosistema seleccionado
+      const allImages = await fetchAllImages()
+      const filteredImages = allImages.filter(image => image.ecosystem === ecosystemId)
+      
+      setHistoricalImages(filteredImages)
+      setIsHistoryModalOpen(true)
+      
+      toast.success(`Se encontraron ${filteredImages.length} imágenes para ${ecosystem.name}`, { icon: "📊" })
+    } catch (error) {
+      console.error("Error al cargar el historial:", error)
+      toast.error("Error al cargar el historial de imágenes", { icon: "❌" })
+    }
+  }
+
+  // Función para ver el detalle de una imagen histórica
+  const handleViewHistoricalDetail = (image: HistoricalImage) => {
+    setSelectedImage(image)
+    setIsImageDetailModalOpen(true)
+  }
+
+  useEffect(() => {
+    const fetchEcosystems = async () => {
+      setIsLoadingEcosystems(true)
+      try {
+        const response = await fetch("https://sistemahidalgodroneva.site/api/monitoring/ecosystems/")
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ecosystems: ${response.statusText}`)
+        }
+        const data: Ecosystem[] = await response.json()
+        setEcosystems(data)
+        toast.success(`${data.length} ecosistemas cargados`, { icon: "🌍" })
+      } catch (error) {
+        console.error("Error fetching ecosystems:", error)
+        toast.error("Error al cargar ecosistemas desde la API", { icon: "❌" })
+      } finally {
+        setIsLoadingEcosystems(false)
+      }
+    }
+
+    fetchEcosystems()
+  }, [])
+
+  const geocodeLocationByName = async (locationName: string): Promise<[number, number] | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`,
+      )
+      if (!response.ok) throw new Error("Geocoding failed")
+
+      const data = await response.json()
+      if (data && data.length > 0) {
+        const lat = Number.parseFloat(data[0].lat)
+        const lon = Number.parseFloat(data[0].lon)
+        return [lat, lon]
+      }
+      return null
+    } catch (error) {
+      console.error("Error geocoding location:", error)
+      return null
+    }
+  }
+
+  const handleEcosystemSelect = async (ecosystemId: string) => {
+    if (featureGroupRef.current) {
+      featureGroupRef.current.clearLayers()
+      setDrawnItemsCount(0)
+    }
+
+    if (ecosystemId === "none") {
+      setSelectedEcosystem(null)
+      setLocationName("")
+      setSelectedPolygonCoords(null)
+      setGeocodedMarker(null)
+      setMapCenter(null)
+      toast("Modo Análisis: Busca el lugar, dibuja un polígono y presiona 'Analizar'.", { icon: "🧐" })
+      return
+    }
+
+    const ecosystem = ecosystems.find((e) => e.id.toString() === ecosystemId)
+    if (!ecosystem) return
+
+    setSelectedEcosystem(ecosystem)
+    setLocationName(ecosystem.name)
+    setGeocodedMarker(null)
+    setSelectedPolygonCoords(null)
+
+    if (ecosystem.location) {
+      const coords = parseWKTPolygon(ecosystem.location)
+      if (coords) {
+        setSelectedPolygonCoords(coords)
+        const center = getPolygonCenter(coords)
+        console.log("Parsed Polygon Coordinates:", coords)
+        setMapCenter(center)
+        toast.success(`Ecosistema "${ecosystem.name}" cargado y ubicado`, { icon: "📍" })
+      } else {
+        toast.error("No se pudo parsear la ubicación del ecosistema", { icon: "⚠️" })
+        setSelectedPolygonCoords(null)
+        setMapCenter(null)
+      }
+    } else {
+      setSelectedPolygonCoords(null)
+      toast.loading(`Buscando "${ecosystem.name}" en el mapa...`, { icon: "🔍" })
+      const geocodedCoords = await geocodeLocationByName(ecosystem.name)
+
+      if (geocodedCoords) {
+        setMapCenter(geocodedCoords)
+        setGeocodedMarker(geocodedCoords)
+        toast.success(`Ubicación encontrada: "${ecosystem.name}"`, { icon: "✅" })
+      } else {
+        toast.error(`No se encontró la ubicación para "${ecosystem.name}"`, { icon: "❌" })
+        setMapCenter(null)
+      }
+    }
+  }
 
   const updateDrawnItemsCount = useCallback(() => {
     if (featureGroupRef.current) {
@@ -880,7 +993,7 @@ const MapComponent: React.FC = () => {
   )
 
   const handleEdited = useCallback((e: any) => {
-    // Si necesitas lógica de edición
+    // Edit logic if needed
   }, [])
 
   const handleDeleted = useCallback(
@@ -906,136 +1019,192 @@ const MapComponent: React.FC = () => {
     }
   }, [handleCreated, handleEdited, handleDeleted])
 
-  const handleExport = () => {
-    if (featureGroupRef.current) {
-      const geoJson = featureGroupRef.current.toGeoJSON()
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geoJson))
-      const downloadAnchorNode = document.createElement("a")
-      downloadAnchorNode.setAttribute("href", dataStr)
-      downloadAnchorNode.setAttribute("download", "map_export.geojson")
-      document.body.appendChild(downloadAnchorNode)
-      downloadAnchorNode.click()
-      downloadAnchorNode.remove()
-      toast.success("GeoJSON exportado correctamente", { icon: "✅" })
-    }
-  }
-
-  const handleSave = () => {
-    if (!referenceMarker) {
-      toast.error("Selecciona un punto de referencia antes de guardar", { icon: "📍" })
+  const handleAnalyzeClick = () => {
+    if (drawnItemsCount === 0) {
+      toast.error("Dibuja un polígono o elemento en el mapa para analizar", { icon: "⚠️" })
       return
     }
-    // Lógica simulada de guardado
-    toast.success(`Datos de ${locationName || "punto de referencia"} guardados`, { icon: "💾" })
-  }
 
-  const handleTogglePointSelection = () => {
-    setIsSelectingPoint((prev) => !prev)
-    if (!isSelectingPoint) {
-      toast("Haz clic en el mapa para seleccionar un punto", { icon: "👆" })
+    if (locationName === "") {
+      toast.error("Busca y selecciona una ubicación primero", { icon: "⚠️" })
+      return
     }
-  }
 
-  const handleMapClick = (latlng: L.LatLng) => {
-    setReferenceMarker(latlng)
-    setIsSelectingPoint(false)
-    toast.success("Punto de referencia establecido", { icon: "📍" })
+    if (featureGroupRef.current) {
+      const geoJson = featureGroupRef.current.toGeoJSON()
+      const wktLocation = convertToWKT(geoJson)
+
+      console.log("[v0] GeoJSON:", geoJson)
+      console.log("[v0] WKT Location:", wktLocation)
+
+      // Crear estructura de datos segura para PhotoAnalyzer
+      const polygonData = {
+        geoJson,
+        locationName,
+        location: wktLocation,
+        drawnItemsCount,
+        // Estructura que PhotoAnalyzer espera
+        analysisResult: {
+          images: [] // Array vacío - PhotoAnalyzer lo llenará con nuevas imágenes
+        }
+      }
+
+      setPolygonDataForAnalysis(polygonData)
+      setIsAnalyzerModalOpen(true)
+      toast.success("Abriendo formulario de análisis...", { icon: "🚀" })
+    }
   }
 
   const handleLocationFound = (label: string) => {
     setLocationName(label)
-    // Asume que si se busca, se establece un punto de referencia simulado en el centro del mapa
-    // En una aplicación real, usarías las coordenadas del resultado de la búsqueda
-    setReferenceMarker(new L.LatLng(51.505, -0.09))
   }
 
-  const handleShowHistory = () => {
-    if (historyData.length > 0) {
-      setIsHistoryModalOpen(true)
-    } else {
-      toast.error("No hay historial de análisis para esta ubicación", { icon: "📊" })
-    }
+  const handleCloseAnalyzerModal = () => {
+    setIsAnalyzerModalOpen(false)
+    setPolygonDataForAnalysis(null) // Limpiar datos al cerrar
   }
 
   return (
     <div className="relative h-screen w-full">
       <MapContainer
-        center={[51.505, -0.09]}
-        zoom={13}
+        center={mapCenter || [21.0, -99.0]}
+        zoom={mapCenter ? 14 : 6}
         scrollWheelZoom={true}
         className="h-full w-full"
-        zoomControl={false} // Removed default zoom control to rely on custom ones or map interaction
+        zoomControl={false}
       >
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="🗺️ Mapa Estándar">
+          <LayersControl.BaseLayer checked name="Mapa Estándar">
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
           </LayersControl.BaseLayer>
 
-          <LayersControl.BaseLayer name="🛰️ Vista Satelital">
+          <LayersControl.BaseLayer name="Vista Satelital">
             <TileLayer
-              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+              attribution='© <a href="https://www.esri.com/">Esri</a>'
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             />
           </LayersControl.BaseLayer>
 
-          <LayersControl.BaseLayer name="🌍 Híbrido (Satélite + Nombres)">
+          <LayersControl.BaseLayer name="Híbrido (Satélite + Nombres)">
             <TileLayer
-              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+              attribution='© <a href="https://www.esri.com/">Esri</a>'
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             />
             <TileLayer
-              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+              attribution='© <a href="https://www.esri.com/">Esri</a>'
               url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
             />
           </LayersControl.BaseLayer>
         </LayersControl>
 
         <GeoSearch onLocationFound={handleLocationFound} />
-        <ClickHandler isSelecting={isSelectingPoint} onMapClick={handleMapClick} />
-        <DrawControl featureGroupRef={featureGroupRef} />
+        <DrawControl featureGroupRef={featureGroupRef} onCountUpdate={updateDrawnItemsCount} />
 
-        {/* Marcador de referencia */}
-        {referenceMarker && (
-          <Marker position={referenceMarker} icon={ReferenceIcon}>
+        {mapCenter && <MapViewController center={mapCenter} zoom={14} />}
+
+        {selectedPolygonCoords && selectedEcosystem && (
+          <Polygon
+            positions={selectedPolygonCoords}
+            pathOptions={{
+              color: "#10b981",
+              fillColor: "#10b981",
+              fillOpacity: 0.2,
+              weight: 3,
+            }}
+          >
             <Popup>
-              <div className="text-sm">
-                <div className="font-semibold text-slate-900 mb-1">Punto de Referencia</div>
-                <div className="text-xs text-slate-600 font-mono">
-                  Lat: {referenceMarker.lat.toFixed(5)}
-                  <br />
-                  Lng: {referenceMarker.lng.toFixed(5)}
+              <div className="text-sm space-y-2 min-w-[200px]">
+                <div className="font-semibold text-gray-900">{selectedEcosystem?.name}</div>
+                <div className="text-xs text-gray-600">ID: {selectedEcosystem?.id}</div>
+                {/* Botón "Ver Historial" */}
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <button
+                    onClick={() => handleViewHistory(selectedEcosystem.id)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  >
+                    <Clock className="w-4 h-4" />
+                    Ver Historial
+                  </button>
                 </div>
+              </div>
+            </Popup>
+          </Polygon>
+        )}
+
+        {geocodedMarker && !selectedPolygonCoords && selectedEcosystem && (
+          <Marker position={geocodedMarker}>
+            <Popup>
+              <div className="text-sm space-y-2">
+                <div className="font-semibold text-gray-900">{selectedEcosystem?.name}</div>
+                <div className="text-xs text-gray-600">ID: {selectedEcosystem?.id}</div>
+                <div className="text-xs text-amber-600 font-medium border-t pt-2 mt-2">
+                  Este ecosistema no tiene polígono definido
+                </div>
+                <div className="text-xs text-blue-600 font-medium">Usa las herramientas para dibujar su área</div>
               </div>
             </Popup>
           </Marker>
         )}
 
-        {/* Botonera de herramientas */}
         <MapTools
-          onExport={handleExport}
-          onSave={handleSave}
-          onTogglePointSelection={handleTogglePointSelection}
-          onShowHistory={handleShowHistory}
-          isSelectingPoint={isSelectingPoint}
+          onAnalyze={handleAnalyzeClick}
           locationName={locationName}
-          referenceMarker={referenceMarker}
           drawnItemsCount={drawnItemsCount}
           isMinimized={isMinimized}
           onToggleMinimize={() => setIsMinimized((prev) => !prev)}
-          hasHistory={historyData.length > 0}
+          isEcosystemSelected={!!selectedEcosystem}
+          ecosystems={ecosystems}
+          selectedEcosystem={selectedEcosystem}
+          onEcosystemSelect={handleEcosystemSelect}
+          isLoadingEcosystems={isLoadingEcosystems}
         />
       </MapContainer>
 
+      {/* Modal de Análisis */}
+      <Dialog open={isAnalyzerModalOpen} onOpenChange={setIsAnalyzerModalOpen}>
+        <DialogContent className="max-w-7xl w-full h-[90vh] max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          <DialogTitle className="sr-only">Análisis de Imágenes</DialogTitle>
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+            <h2 className="text-base font-semibold text-gray-900">Análisis de Imágenes</h2>
+            <Button
+              onClick={handleCloseAnalyzerModal}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-lg hover:bg-gray-200"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4">
+              {isAnalyzerModalOpen && polygonDataForAnalysis && (
+                <PhotoAnalyzer 
+                  polygonData={polygonDataForAnalysis} 
+                  compact 
+                />
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal de Historial */}
-      <HistoryModal
+      <HistoryListModal
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
-        locationName={locationName}
-        referenceMarker={referenceMarker}
-        historyData={historyData}
+        historicalImages={historicalImages}
+        ecosystemName={selectedEcosystemForHistory?.name || 'Ecosistema'}
+        onViewDetail={handleViewHistoricalDetail}
+      />
+
+      {/* Modal de Detalle de Imagen */}
+      <ImageDetailModal
+        isOpen={isImageDetailModalOpen}
+        onClose={() => setIsImageDetailModalOpen(false)}
+        image={selectedImage}
       />
     </div>
   )

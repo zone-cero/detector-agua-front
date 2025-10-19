@@ -59,149 +59,153 @@ export function HeroImage() {
     router.push('/historico')
   }
 
-  return (
-    <section ref={ref} className="pt-20 pb-0 px-6 relative overflow-hidden">
-      {/* Bolita que sigue el cursor */}
+ return (
+  <section ref={ref} className="pt-20 pb-0 px-6 relative overflow-hidden min-h-[500px] lg:min-h-screen">
+    
+    {/* Imagen de Fondo del Hero */}
+    <div 
+      className="absolute inset-0 z-0" 
+      style={{
+        backgroundImage: `url('/imagenes/Gemini_Generated_Image_sgf3bpsgf3bpsgf3.png')`, 
+        backgroundSize: 'cover', 
+        backgroundPosition: 'center', 
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+        <div className="absolute inset-0 bg-black opacity-30"></div>
+    </div>
+    
+    {/* Bolita que sigue el cursor */}
+    <motion.div
+      className="fixed pointer-events-none z-50 mix-blend-difference"
+      animate={{
+        x: mousePosition.x - 15,
+        y: mousePosition.y - 15,
+        scale: isHoveringButton ? 1.5 : 1,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 500,
+        damping: 28,
+        mass: 0.5
+      }}
+    >
+      <div className={`w-8 h-8 rounded-full ${isHoveringButton
+        ? 'bg-purple-400 blur-[1px]'
+        : 'bg-gradient-to-br from-purple-500 to-pink-500'
+        } transition-all duration-300 ${isHoveringButton ? 'opacity-80' : 'opacity-60'
+        } shadow-lg`} />
+
+      <div className={`absolute inset-0 rounded-full ${isHoveringButton
+        ? 'bg-purple-300 animate-pulse'
+        : 'bg-purple-400'
+        } blur-md opacity-30 -z-10 transition-all duration-300`} />
+    </motion.div>
+
+    {/* Background Elements con Paralaje */}
+    <motion.div
+      className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-slate-50/30 z-10"
+      style={{ y: yBackground }}
+    ></motion.div>
+    <motion.div
+      className="absolute top-1/2 left-1/4 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl z-10"
+      style={{ y: yBackground }}
+    ></motion.div>
+    <motion.div
+      className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-slate-100/30 rounded-full blur-3xl z-10"
+      style={{ y: yBackground }}
+    ></motion.div>
+
+    <div className="max-w-7xl mx-auto relative z-20">
       <motion.div
-        className="fixed pointer-events-none z-50 mix-blend-difference"
-        animate={{
-          x: mousePosition.x - 15, // Centrar la bolita
-          y: mousePosition.y - 15,
-          scale: isHoveringButton ? 1.5 : 1, // Efecto al hacer hover en botones
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 500,
-          damping: 28,
-          mass: 0.5
-        }}
+        className="grid lg:grid-cols-2 gap-20 items-center"
+        initial="initial"
+        animate="animate"
+        variants={stagger}
       >
-        <div className={`w-8 h-8 rounded-full ${isHoveringButton
-          ? 'bg-purple-400 blur-[1px]'
-          : 'bg-gradient-to-br from-purple-500 to-pink-500'
-          } transition-all duration-300 ${isHoveringButton ? 'opacity-80' : 'opacity-60'
-          } shadow-lg`} />
+        <motion.div className="space-y-10 max-w-6xl" variants={fadeInUp}>
+          <div className="space-y-4 relative">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-3xl z-0"></div>
 
-        {/* Efecto de resplandor */}
-        <div className={`absolute inset-0 rounded-full ${isHoveringButton
-          ? 'bg-purple-300 animate-pulse'
-          : 'bg-purple-400'
-          } blur-md opacity-30 -z-10 transition-all duration-300`} />
-      </motion.div>
+            <h1 className="text-6xl lg:text-5xl font-light text-white leading-snug relative z-10">
+              <span className="block font-semibold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                Análisis de Imágenes
+              </span>
+              <span className="block font-semibold bg-gradient-to-r from-gray-200 to-gray-300 bg-clip-text text-transparent">
+                para Monitoreo
+              </span>
+              <span className="block font-light text-gray-300">
+                Hídrico y Vegetal
+              </span>
+            </h1>
 
-      {/* Background Elements con Paralaje */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-slate-50/30"
-        style={{ y: yBackground }}
-      ></motion.div>
-      <motion.div
-        className="absolute top-1/2 left-1/4 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"
-        style={{ y: yBackground }}
-      ></motion.div>
-      <motion.div
-        className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-slate-100/30 rounded-full blur-3xl"
-        style={{ y: yBackground }}
-      ></motion.div>
+            <p className="text-lg lg:text-xl text-gray-200 leading-relaxed max-w-xl z-10">
+              Sistema para cuantificar áreas de agua y Lirio en imágenes. Permite comparar los cambios históricos y monitorear ecosistemas.
+            </p>
+          </div>
 
-      <div className="max-w-7xl mx-auto relative">
-        <motion.div
-          className="grid lg:grid-cols-2 gap-20 items-center"
-          initial="initial"
-          animate="animate"
-          variants={stagger}
-        >
-          {/* Columna Izquierda - Título y contenido */}
-          <motion.div className="space-y-10 max-w-6xl" variants={fadeInUp}>
-            {/* Ajuste de espaciado en el contenedor principal del texto */}
-            <div className="space-y-4 relative">
-              {/* Posicionamiento del blur ajustado para centrarlo (mejor práctica) */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-3xl z-0"></div>
-
-              {/* Ajuste de tamaño y leading (leading-snug) en H1 */}
-              <h1 className="text-6xl lg:text-5xl font-light text-slate-900 leading-snug relative z-10">
-                {/* Reorganización de spans para un ancho más equilibrado */}
-                <span className="block font-semibold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent">
-                  Análisis de Imágenes
-                </span>
-                <span className="block font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent">
-                  para Monitoreo
-                </span>
-                <span className="block font-light text-slate-600">
-                  Hídrico y Vegetal
-                </span>
-              </h1>
-
-              {/* Párrafo simplificado y preciso */}
-              <p className="text-lg lg:text-xl text-slate-600 leading-relaxed max-w-xl z-10">
-                Sistema para cuantificar áreas de agua y Lirio en imágenes. Permite comparar los cambios históricos y monitorear ecosistemas.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-5 relative z-10">
-              {/* Botón Ver Historial - ESTILOS ORIGINALES MANTENIDOS */}
-              <Button
-                className="bg-transparent text-gray-600 border border-gray-600 
-                transition ease-in-out duration-300 hover:bg-transparent"
-                size="lg"
-                onClick={handleRedirectToHistory}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(75, 85, 99)';
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                  setIsHoveringButton(true);
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  setIsHoveringButton(false);
-                }}
-              >
-                Ver Historial
-              </Button>
-
-              {/* Botón Analizar Imagen - ESTILOS ORIGINALES MANTENIDOS */}
-              <Button
-                className="bg-transparent text-red-700 border border-red-700 
-                transition ease-in-out duration-300 hover:bg-transparent"
-                variant="secondary"
-                size="lg"
-                onClick={handleRedirectToAnalyzer}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(185, 28, 28)';
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                  setIsHoveringButton(true);
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  setIsHoveringButton(false);
-                }}
-              >
-                Analizar Imagen
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </motion.div>
-
-          {/* Columna Derecha - Imagen de Hidalgo con Paralaje */}
-          <motion.div
-            className="relative p-8"
-            variants={fadeInUp}
-          >
-            <motion.div
-              className="relative z-10 w-full rounded-xl overflow-hidden"
-              style={{
-                y: yMap,
+          <div className="flex flex-col sm:flex-row gap-5 relative z-10">
+            <Button
+              className="bg-white text-gray-800 border border-gray-600 
+              transition ease-in-out duration-300 hover:bg-gray-100"
+              size="lg"
+              onClick={handleRedirectToHistory}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(156, 163, 175)';
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                setIsHoveringButton(true);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateY(0)';
+                setIsHoveringButton(false);
               }}
             >
-              <img
-                src="/imagenes/Blank_map_of_Hidalgo_1_.png"
-                alt="Mapa de Hidalgo"
-                className="w-full h-auto object-cover opacity-100"
-              />
-            </motion.div>
+              Ver Historial
+            </Button>
+
+            <Button
+              className="bg-transparent text-red-300 border border-red-300 
+              transition ease-in-out duration-300 hover:bg-red-900/10"
+              variant="secondary"
+              size="lg"
+              onClick={handleRedirectToAnalyzer}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(248, 113, 113)';
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                setIsHoveringButton(true);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateY(0)';
+                setIsHoveringButton(false);
+              }}
+            >
+              Analizar Imagen
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="relative p-8"
+          variants={fadeInUp}
+        >
+          <motion.div
+            className="relative z-10 w-full rounded-xl overflow-hidden"
+            style={{
+              y: yMap,
+            }}
+          >
+            <img
+              src="/imagenes/Blank_map_of_Hidalgo_1_.png"
+              alt="Mapa de Hidalgo"
+              className="w-full h-auto object-cover opacity-100"
+            />
           </motion.div>
         </motion.div>
-      </div>
-    </section>
-  )
+      </motion.div>
+    </div>
+  </section>
+)
 }
