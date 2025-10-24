@@ -769,34 +769,8 @@ const MapViewController: React.FC<{ center: [number, number] | null; zoom: numbe
   return null
 }
 
-// PhotoAnalyzer seguro con estructura de datos corregida
-const PhotoAnalyzer = dynamic(() => import("@/components/photo-analyzer").then(mod => {
-  // Función wrapper para asegurar la estructura de datos y manejar errores
-  const SafePhotoAnalyzer = (props: any) => {
-    // Asegurar que polygonData tenga la estructura correcta
-    const safePolygonData = props.polygonData ? {
-      ...props.polygonData,
-      // Garantizar que analysisResult.images exista
-      analysisResult: {
-        images: props.polygonData.analysisResult?.images || []
-      }
-    } : {
-      // Si no hay polygonData, crear estructura vacía
-      geoJson: null,
-      locationName: "",
-      location: "",
-      drawnItemsCount: 0,
-      analysisResult: {
-        images: []
-      }
-    };
-
-    const Component = mod.default || mod;
-    return <Component {...props} polygonData={safePolygonData} />;
-  };
-  
-  return SafePhotoAnalyzer;
-}), {
+// PhotoAnalyzer simple y directo - CORREGIDO
+const PhotoAnalyzer = dynamic(() => import("@/components/photo-analyzer"), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center p-12">
@@ -1037,16 +1011,13 @@ const MapComponent: React.FC<MapComponentProps> = ({ onAnalyze }) => {
       console.log("[v0] GeoJSON:", geoJson)
       console.log("[v0] WKT Location:", wktLocation)
 
-      // Crear estructura de datos segura para PhotoAnalyzer
+      // ✅ ESTRUCTURA CORRECTA para PhotoAnalyzer
       const polygonData = {
         geoJson,
         locationName,
         location: wktLocation,
         drawnItemsCount,
-        // Estructura que PhotoAnalyzer espera
-        analysisResult: {
-          images: [] // Array vacío - PhotoAnalyzer lo llenará con nuevas imágenes
-        }
+        // ✅ SOLO estos campos - analysisResult es manejado internamente por PhotoAnalyzer
       }
 
       setPolygonDataForAnalysis(polygonData)
@@ -1163,12 +1134,12 @@ const MapComponent: React.FC<MapComponentProps> = ({ onAnalyze }) => {
         />
       </MapContainer>
 
-      {/* Modal de Análisis */}
+      {/* Modal de Análisis
       <Dialog open={isAnalyzerModalOpen} onOpenChange={setIsAnalyzerModalOpen}>
         <DialogContent className="max-w-7xl w-full h-[90vh] max-h-[90vh] p-0 overflow-hidden flex flex-col">
           <DialogTitle className="sr-only">Análisis de Imágenes</DialogTitle>
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-            <h2 className="text-base font-semibold text-gray-900">Análisis de Imágenes</h2>
+            <h2 className="text-base font-semibold text-gray-900">Análisis de Imágenesssssss</h2>
             <Button
               onClick={handleCloseAnalyzerModal}
               variant="ghost"
@@ -1178,18 +1149,9 @@ const MapComponent: React.FC<MapComponentProps> = ({ onAnalyze }) => {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4">
-              {isAnalyzerModalOpen && polygonDataForAnalysis && (
-                <PhotoAnalyzer 
-                  polygonData={polygonDataForAnalysis} 
-                  compact 
-                />
-              )}
-            </div>
-          </div>
+         
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* Modal de Historial */}
       <HistoryListModal

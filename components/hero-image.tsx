@@ -72,7 +72,13 @@ export function HeroImage() {
         backgroundRepeat: 'no-repeat',
       }}
     >
-        <div className="absolute inset-0 bg-black opacity-30"></div>
+        {/* Mask solo en la parte inferior */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/70 to-transparent"
+        ></div>
+        
+        {/* Overlay general más suave */}
+        <div className="absolute inset-0 bg-black/20"></div>
     </div>
     
     {/* Bolita que sigue el cursor */}
@@ -116,7 +122,7 @@ export function HeroImage() {
       style={{ y: yBackground }}
     ></motion.div>
 
-    <div className="max-w-7xl mx-auto relative z-20">
+    <div className="max-w-7xl mx-auto relative">
       <motion.div
         className="grid lg:grid-cols-2 gap-20 items-center"
         initial="initial"

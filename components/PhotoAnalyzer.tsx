@@ -304,6 +304,7 @@ const ProfessionalHistoryTable: React.FC<{
         </thead>
         <tbody className="divide-y divide-slate-200">
           {filteredData.map((item, index) => (
+            
             <tr key={item.id} className="hover:bg-slate-50 transition-colors">
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
@@ -318,7 +319,7 @@ const ProfessionalHistoryTable: React.FC<{
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
                   <img
-                    src={`${REMOTE_BASE_URL}${item.image}`}
+                    src={`${item.image}`}
                     alt={`Captura ${item.id}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -402,13 +403,13 @@ const ProfessionalHistoryTable: React.FC<{
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     className="text-slate-600 border-slate-200 hover:bg-slate-50"
                   >
                     <MoreVertical className="w-4 h-4" />
-                  </Button>
+                  </Button> */}
                 </div>
               </td>
             </tr>
@@ -425,10 +426,11 @@ const ProfessionalHistoryTable: React.FC<{
         <Card key={item.id} className="overflow-hidden border border-slate-200 hover:shadow-lg transition-all duration-300">
           <div className="relative">
             <img
-              src={`${REMOTE_BASE_URL}${item.image}`}
+              src={`${item.image}`}
               alt={`Captura ${item.id}`}
               className="w-full h-48 object-cover"
               onError={(e) => {
+                 console.log(`❌ Error cargando imagen para item ${item.id}`);
                 (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>'
               }}
             />
@@ -783,19 +785,7 @@ const ProfessionalHistoryModal: React.FC<ProfessionalHistoryModalProps> = ({
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button
-            onClick={handleExportCSV}
-            disabled={exporting}
-            variant="outline"
-            className="border-slate-300"
-          >
-            {exporting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            {exporting ? 'Exportando...' : 'Exportar CSV'}
-          </Button>
+        
           <Button
             onClick={onClose}
             variant="ghost"
@@ -857,12 +847,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
         className={`relative w-full ${sizeClass} p-0 border-0 shadow-2xl bg-white rounded-xl transform transition-all duration-300 translate-y-8 md:translate-y-12`}
         style={{ top: "30px" }}
       >
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <h3 className="text-[20px] font-semibold text-slate-900">{title}</h3>
-          <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-500 hover:text-slate-900">
-            <X className="w-6 h-6" />
-          </Button>
-        </div>
+     
         <div className="p-6">{children}</div>
       </Card>
     </div>
@@ -1664,34 +1649,34 @@ export default function PhotoAnalyzer() {
     const formatPercent = (percent: number) => percent.toFixed(2) + "%"
 
     // 1. Obtener la URL de la API
-    const imageUrlFromAPI = result.image;
+    const finalSrc = result.image;
 
     // 2. Determinar la fuente final
-    let finalSrc;
+    // let finalSrc;
 
-    if (typeof imageUrlFromAPI === 'string' && imageUrlFromAPI.length > 0) {
-      // Caso A: Si ya empieza con 'http' o 'https', ¡es una URL absoluta!
-      if (imageUrlFromAPI.startsWith('http://') || imageUrlFromAPI.startsWith('https://')) {
-        finalSrc = imageUrlFromAPI;
-      }
-      // Caso B: Si no es una URL absoluta (es una ruta relativa como '/media/drones/...')
-      else {
-        // Normalizamos la base para evitar dobles barras y concatenamos
-        const normalizedBase = REMOTE_BASE_URL.endsWith('/')
-          ? REMOTE_BASE_URL.slice(0, -1) // Quitar barra final si existe
-          : REMOTE_BASE_URL;
+    // if (typeof imageUrlFromAPI === 'string' && imageUrlFromAPI.length > 0) {
+    //   // Caso A: Si ya empieza con 'http' o 'https', ¡es una URL absoluta!
+    //   if (imageUrlFromAPI.startsWith('http://') || imageUrlFromAPI.startsWith('https://')) {
+    //     finalSrc = imageUrlFromAPI;
+    //   }
+    //   // Caso B: Si no es una URL absoluta (es una ruta relativa como '/media/drones/...')
+    //   else {
+    //     // Normalizamos la base para evitar dobles barras y concatenamos
+    //     const normalizedBase = REMOTE_BASE_URL.endsWith('/')
+    //       ? REMOTE_BASE_URL.slice(0, -1) // Quitar barra final si existe
+    //       : REMOTE_BASE_URL;
 
-        // Aseguramos que la ruta de la imagen empiece con una barra para la concatenación
-        const normalizedPath = imageUrlFromAPI.startsWith('/')
-          ? imageUrlFromAPI
-          : `/${imageUrlFromAPI}`;
+    //     // Aseguramos que la ruta de la imagen empiece con una barra para la concatenación
+    //     const normalizedPath = imageUrlFromAPI.startsWith('/')
+    //       ? imageUrlFromAPI
+    //       : `/${imageUrlFromAPI}`;
 
-        finalSrc = `${normalizedBase}${normalizedPath}`;
-      }
-    } else {
-      // Caso C: Si el campo 'image' está vacío o nulo
-      finalSrc = '/placeholder.jpg'; // Usa una imagen de reserva local
-    }
+    //     finalSrc = `${normalizedBase}${normalizedPath}`;
+    //   }
+    // } else {
+    //   // Caso C: Si el campo 'image' está vacío o nulo
+    //   finalSrc = '/placeholder.jpg'; // Usa una imagen de reserva local
+    // }
 
     return (
       <Modal isOpen={isOpen} onClose={onClose} title={`Detalle de Captura ID: ${result.id}`} size="xl">

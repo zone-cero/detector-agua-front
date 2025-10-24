@@ -1,5 +1,6 @@
 "use client"
 
+
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -63,6 +64,7 @@ export function Header() {
                 {[
                   { href: "/", label: "Inicio" },
                   { href: "/historico", label: "Histórico" },
+                  { href: "/mapa-panel", label: "Panel Mapa" },
                  
                 ].map((item) => (
                   <Link
