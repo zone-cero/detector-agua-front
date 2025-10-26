@@ -2,66 +2,103 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Droplets, Mail, Phone, MapPin } from "lucide-react"
+import { Mail, Phone, MapPin } from "lucide-react"
 
 export function Footer() {
   const contactItems = [
-    { icon: Mail, text: "arturo.meneses@uthh.edu.mx", href: "arturo.meneses@uthh.edu.mx" },
-    { icon: Phone, text: "+52 (77) 5144 9297", href: "tel:+52 775 144 9297" },
+    { icon: Mail, text: "arturo.meneses@uthh.edu.mx", href: "mailto:arturo.meneses@uthh.edu.mx" },
+    { icon: Phone, text: "+52 (77) 5144 9297", href: "tel:+527751449297" },
     { icon: MapPin, text: "Huejutla de Reyes, Hidalgo, México", href: "#" },
   ]
 
+  const navLinks = [
+    { name: "Características", href: "#features" },
+    { name: "Herramientas", href: "#tools" },
+    // Add more links as needed
+  ]
+
   return (
-    <footer className="bg-gray-100 text-slate-700 border-t border-slate-200">
-      <div className="container mx-auto px-6 py-16 max-w-7xl relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12 items-center">
-          {/* Logo y descripción */}
-          <div className="space-y-5">
+    <footer className="bg-gray-200 border-t border-gray-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* === Top Section: Main content === */}
+        <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Column 1: Logo and Description */}
+          <div className="lg:col-span-4">
             <Image
               src="/imagenes/logo_gobierno_gold_ef3adc17fb.png"
               alt="Logo de Gobierno"
-              width={240}
-              height={60}
+              width={200}
+              height={50}
               className="object-contain"
             />
-            <p className="text-slate-600 leading-relaxed text-[15px] max-w-md">
-              Plataforma integral para la cuantificación y el análisis del área de cuerpos de agua y cobertura vegetal en nuestra región, promoviendo la gestión precisa de los recursos naturales.
+            <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-xs">
+              Plataforma para la cuantificación y análisis de cuerpos de agua y cobertura vegetal.
             </p>
           </div>
 
-          {/* Contacto y Escudo */}
-          <div className="space-y-5 flex flex-col items-end">
-            {/* Escudo */}
-            <Image src="/imagenes/Escudo_de_Armas_Oficial_del_Estado_de_Hidalgo.png" alt="Escudo de Monitoreo de Agua" width={120} height={120} className="object-contain opacity-70" />
-
-            {/* Contacto */}
-            <div className="space-y-3 text-right">
-              <h3 className="text-slate-900 font-semibold text-lg">Contacto</h3>
-              {contactItems.map((item, index) => (
-                <a key={index} href={item.href} className="flex items-center group transition-colors duration-200 justify-end">
-                  <div className="w-5 h-5 mr-3 flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-[18px] h-[18px] text-slate-500 group-hover:text-blue-600 transition-colors" />
-                  </div>
-                  <span className="text-slate-600 group-hover:text-blue-600 text-[15px] transition-colors">
-                    {item.text}
-                  </span>
-                </a>
+          {/* Column 2: Navigation Links */}
+          <div className="lg:col-span-2 lg:col-start-7">
+            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">
+              Navegación
+            </h3>
+            <ul className="mt-4 space-y-3">
+              {navLinks.map((link) => (
+                <li key={link.name}>
+                  <Link href={link.href} className="text-sm text-gray-600 transition-colors hover:text-blue-600">
+                    {link.name}
+                  </Link>
+                </li>
               ))}
-            </div>
-
+            </ul>
           </div>
+          
+          {/* Column 3: Contact Info */}
+          <div className="lg:col-span-4">
+            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">
+              Contacto
+            </h3>
+            <ul className="mt-4 space-y-3">
+              {contactItems.map((item, index) => (
+                <li key={index}>
+                  <a
+                    href={item.href}
+                    className="flex items-start group text-sm text-gray-600 transition-colors hover:text-blue-600"
+                  >
+                    <item.icon className="w-4 h-4 mr-3 mt-0.5 flex-shrink-0 text-gray-400 transition-colors group-hover:text-blue-500" aria-hidden="true" />
+                    <span>{item.text}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
         </div>
 
-        <div className="pt-8 border-t border-slate-200 ">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <span>© 2025 Sistema de Monitoreo de Cuerpos de Agua</span>
-            </div>
-
-            <div className="flex items-center gap-6 text-sm">
-              <Image src="/imagenes/Logo_gob_hidalgo.svg" alt="Logo de Gobierno" width={240} height={60} className="object-contain" />
-
-            </div>
+        {/* === Bottom Bar: Copyright and Institutional Logos === */}
+        <div className="py-8 border-t border-gray-200/80 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <span className="text-xs text-gray-500">
+            © {new Date().getFullYear()} Sistema de Monitoreo de Cuerpos de Agua. Todos los derechos reservados.
+          </span>
+          <div className="flex items-center gap-6">
+            <a href="#" aria-label="Escudo del Estado de Hidalgo">
+              <Image 
+                src="/imagenes/Escudo_de_Armas_Oficial_del_Estado_de_Hidalgo.png" 
+                alt="Escudo de Hidalgo" 
+                width={40} 
+                height={40} 
+                className="object-contain grayscale opacity-70 transition hover:opacity-100 hover:grayscale-0" 
+              />
+            </a>
+            <a href="#" aria-label="Logo del Gobierno de Hidalgo">
+              <Image 
+                src="/imagenes/Logo_gob_hidalgo.svg" 
+                alt="Logo Gobierno de Hidalgo" 
+                width={120} 
+                height={30} 
+                className="object-contain grayscale opacity-70 transition hover:opacity-100 hover:grayscale-0"
+              />
+            </a>
           </div>
         </div>
       </div>

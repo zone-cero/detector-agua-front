@@ -14,16 +14,12 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
-  Droplets,
-  Leaf,
-  Calendar,
   FileText,
   Sparkles,
   Loader2,
   Trash2,
   Plus,
   Eye,
-  LandPlot,
   Map,
 } from "lucide-react"
 
@@ -102,12 +98,18 @@ const Modal: React.FC<{
 }> = ({ isOpen, onClose, title, children, size = "xl" }) => {
   const sizeClass = useMemo(() => {
     switch (size) {
-      case "sm": return "max-w-md"
-      case "md": return "max-w-lg"
-      case "lg": return "max-w-2xl"
-      case "xl": return "max-w-4xl"
-      case "full": return "max-w-7xl"
-      default: return "max-w-4xl"
+      case "sm":
+        return "max-w-md"
+      case "md":
+        return "max-w-lg"
+      case "lg":
+        return "max-w-2xl"
+      case "xl":
+        return "max-w-4xl"
+      case "full":
+        return "max-w-7xl"
+      default:
+        return "max-w-4xl"
     }
   }, [size])
 
@@ -118,18 +120,11 @@ const Modal: React.FC<{
       <div className={`relative w-full ${sizeClass} bg-white rounded-lg shadow-2xl max-h-[90vh] overflow-hidden`}>
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-lg hover:bg-slate-100"
-          >
+          <Button onClick={onClose} variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-slate-100">
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-          {children}
-        </div>
+        <div className="overflow-y-auto max-h-[calc(90vh-80px)]">{children}</div>
       </div>
     </div>
   )
@@ -147,15 +142,7 @@ const UploadStep: React.FC<{
   onAreaClick: () => void
   fileInputRef: React.RefObject<HTMLInputElement>
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-}> = ({
-  isDragging,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onAreaClick,
-  fileInputRef,
-  onFileChange,
-}) => (
+}> = ({ isDragging, onDragOver, onDragLeave, onDrop, onAreaClick, fileInputRef, onFileChange }) => (
   <Card
     className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
       isDragging
@@ -181,9 +168,7 @@ const UploadStep: React.FC<{
       </div>
       <h3 className="text-lg font-medium text-slate-900 mb-2">Arrastra tus imágenes aquí</h3>
       <p className="text-sm text-slate-600 mb-4">o haz clic para seleccionar archivos</p>
-      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-        Seleccionar Imágenes
-      </Button>
+      <Button className="bg-blue-600 hover:bg-blue-700 text-white">Seleccionar Imágenes</Button>
       <p className="text-xs text-slate-500 mt-4">Formatos: JPG, PNG, WEBP</p>
     </div>
   </Card>
@@ -233,13 +218,11 @@ const ConfigureStep: React.FC<{
     try {
       if (coords && coords[0] && coords[0].length > 0) {
         const firstCoords = coords[0].slice(0, 3) // Mostrar solo las primeras 3 coordenadas
-        return firstCoords.map(coord => 
-          `${coord[1].toFixed(6)}, ${coord[0].toFixed(6)}`
-        ).join('; ')
+        return firstCoords.map((coord) => `${coord[1].toFixed(6)}, ${coord[0].toFixed(6)}`).join("; ")
       }
-      return 'Coordenadas no disponibles'
+      return "Coordenadas no disponibles"
     } catch (error) {
-      return 'Error al procesar coordenadas'
+      return "Error al procesar coordenadas"
     }
   }, [])
 
@@ -279,9 +262,9 @@ const ConfigureStep: React.FC<{
             <Label htmlFor="ecosystem-select" className="mb-2 text-sm font-medium text-slate-700">
               Seleccionar Ecosistema
             </Label>
-            <select 
-              id="ecosystem-select" 
-              value={ecosystemId || "new"} 
+            <select
+              id="ecosystem-select"
+              value={ecosystemId || "new"}
               onChange={handleSelectChange}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
@@ -333,9 +316,7 @@ const ConfigureStep: React.FC<{
         )}
       </Card>
 
-      <h3 className="text-lg font-medium text-slate-900">
-        Imágenes a Analizar ({selectedFiles.length})
-      </h3>
+      <h3 className="text-lg font-medium text-slate-900">Imágenes a Analizar ({selectedFiles.length})</h3>
 
       <div className="space-y-3">
         {selectedFiles.map((file, index) => (
@@ -389,7 +370,7 @@ const ConfigureStep: React.FC<{
       <Button
         onClick={onAddMore}
         variant="outline"
-        className="w-full border-dashed border-slate-300 text-slate-600 hover:bg-slate-50"
+        className="w-full border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 bg-transparent"
       >
         <Plus className="w-4 h-4 mr-2" />
         Añadir más imágenes
@@ -404,9 +385,7 @@ const AnalyzeStep: React.FC<{
   <Card className="p-8 text-center">
     <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-blue-600" />
     <h3 className="text-xl font-medium text-slate-900 mb-2">Analizando Imágenes</h3>
-    <p className="text-slate-600">
-      Procesando las imágenes seleccionadas...
-    </p>
+    <p className="text-slate-600">Procesando las imágenes seleccionadas...</p>
   </Card>
 )
 
@@ -427,11 +406,9 @@ const ResultsStep: React.FC<{
       {result.images.map((image, index) => (
         <Card key={image.id} className="p-3 border border-slate-200 space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-slate-900">
-              Captura #{index + 1}
-            </span>
+            <span className="text-sm font-semibold text-slate-900">Captura #{index + 1}</span>
             <span className="text-xs text-slate-500">
-              {image.capture_date ? new Date(image.capture_date).toLocaleDateString() : 'N/A'}
+              {image.capture_date ? new Date(image.capture_date).toLocaleDateString() : "N/A"}
             </span>
           </div>
 
@@ -442,7 +419,7 @@ const ResultsStep: React.FC<{
               className="w-full h-full object-cover"
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="p-2 bg-blue-50 rounded-lg">
               <p className="text-slate-600 text-xs">Agua</p>
@@ -453,7 +430,7 @@ const ResultsStep: React.FC<{
               <p className="font-bold text-green-700">{image.vegetation_percentage.toFixed(1)}%</p>
             </div>
           </div>
-          
+
           <Button
             onClick={() => onOpenModal(image)}
             variant="outline"
@@ -602,12 +579,12 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
       if (currentStep === "upload") {
         setCurrentStep("configure")
       }
-      
+
       // Configurar nombre del ecosistema desde el polígono
       if (polygonData.locationName && !ecosystemName) {
         setEcosystemName(polygonData.locationName)
       }
-      
+
       // Configurar ecosystemId si viene del polígono
       if (polygonData.ecosystemId && polygonData.ecosystemId !== "new") {
         setEcosystemId(polygonData.ecosystemId)
@@ -656,7 +633,8 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
     if (!ecosystemName.trim()) {
       return "El nombre del cuerpo de agua es requerido."
     }
-    if (!polygonData && ecosystemId === "new") {
+    // Si se selecciona un ecosistema existente, no se requiere polígono
+    if (ecosystemId === "new" && !polygonData) {
       return "Debes dibujar un polígono en el mapa para crear un nuevo ecosistema."
     }
     return null
@@ -679,25 +657,23 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
     try {
       const formData = new FormData()
 
-      // Usar ecosystem_id del polígono o del formulario
+      // Si es un ecosistema existente, solo enviar el ID
       if (polygonData?.ecosystemId && polygonData.ecosystemId !== "new") {
         formData.append("ecosystem_id", polygonData.ecosystemId)
       } else if (ecosystemId && ecosystemId !== "new") {
         formData.append("ecosystem_id", ecosystemId)
       } else {
+        // Solo para ecosistemas nuevos
         formData.append("ecosystem_name", ecosystemName.trim())
       }
 
-      // ENVIAR COORDENADAS EN FORMATO SIMPLE - COMO EL SERVIDOR ESPERA
-      if (polygonData) {
+      if (ecosystemId === "new" && polygonData) {
         // Enviar coordenadas en formato simple
         if (polygonData.coordinates) {
-          // Si ya vienen las coordenadas procesadas
-          const simpleCoords = polygonData.coordinates[0] // Tomar el primer array de coordenadas
+          const simpleCoords = polygonData.coordinates[0]
           formData.append("coordinates", JSON.stringify(simpleCoords))
           console.log("Enviando coordenadas procesadas:", simpleCoords)
         } else if (polygonData.geoJson) {
-          // Extraer coordenadas del GeoJSON
           const simpleCoords = extractSimpleCoordinates(polygonData.geoJson)
           if (simpleCoords.length > 0) {
             formData.append("coordinates", JSON.stringify(simpleCoords))
@@ -705,12 +681,11 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
           }
         }
 
-        // También enviar el WKT por si acaso
+        // También enviar el WKT para ecosistemas nuevos
         if (polygonData.location) {
           formData.append("location", polygonData.location)
         }
 
-        // Información adicional
         formData.append("polygon_name", polygonData.locationName)
       }
 
@@ -730,6 +705,8 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
       })
 
       console.log("Enviando datos al servidor...")
+      console.log("Tipo de análisis:", ecosystemId === "new" ? "Nuevo ecosistema" : "Ecosistema existente")
+
       const response = await fetch(`${REMOTE_BASE_URL}/api/monitoring/images/upload-multiple/`, {
         method: "POST",
         body: formData,
@@ -747,11 +724,13 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
 
       toast({
         title: "Análisis Completado",
-        description: "Las imágenes se analizaron con éxito y las coordenadas se guardaron.",
+        description:
+          ecosystemId === "new"
+            ? "Las imágenes se analizaron con éxito y el nuevo ecosistema fue creado."
+            : "Las imágenes se analizaron con éxito en el ecosistema existente.",
       })
 
       console.log("✅ Análisis completado exitosamente")
-
     } catch (error) {
       console.error("ERROR en el análisis:", error)
       toast({
@@ -792,8 +771,8 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
                       isCompleted
                         ? "bg-blue-600 text-white"
                         : isActive
-                        ? "bg-blue-100 text-blue-600 border-2 border-blue-600"
-                        : "bg-slate-100 text-slate-400"
+                          ? "bg-blue-100 text-blue-600 border-2 border-blue-600"
+                          : "bg-slate-100 text-slate-400"
                     }`}
                   >
                     {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
@@ -807,11 +786,7 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
                   </span>
                 </div>
                 {index < steps.length - 1 && (
-                  <div
-                    className={`h-0.5 flex-1 mx-2 ${
-                      isCompleted ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  />
+                  <div className={`h-0.5 flex-1 mx-2 ${isCompleted ? "bg-blue-600" : "bg-slate-200"}`} />
                 )}
               </div>
             )
@@ -880,10 +855,7 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
         {/* Controles */}
         <div className="flex justify-between pt-4 border-t border-slate-200">
           {currentStep === "upload" && selectedFiles.length > 0 && (
-            <Button
-              onClick={() => setCurrentStep("configure")}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
+            <Button onClick={() => setCurrentStep("configure")} className="bg-blue-600 hover:bg-blue-700 text-white">
               Continuar
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
@@ -891,17 +863,15 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
 
           {currentStep === "configure" && (
             <div className="flex space-x-2 w-full">
-              <Button
-                onClick={() => setCurrentStep("upload")}
-                variant="outline"
-                className="flex-1"
-              >
+              <Button onClick={() => setCurrentStep("upload")} variant="outline" className="flex-1">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Volver
               </Button>
               <Button
                 onClick={handleAnalyze}
-                disabled={selectedFiles.length === 0 || !ecosystemName.trim()}
+                disabled={
+                  selectedFiles.length === 0 || !ecosystemName.trim() || (ecosystemId === "new" && !polygonData)
+                }
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Iniciar Análisis"}
@@ -911,17 +881,10 @@ export const PhotoAnalyzerModal: React.FC<PhotoAnalyzerModalProps> = ({
 
           {currentStep === "results" && (
             <div className="flex space-x-2 w-full">
-              <Button
-                onClick={handleReset}
-                variant="outline"
-                className="flex-1"
-              >
+              <Button onClick={handleReset} variant="outline" className="flex-1 bg-transparent">
                 Nuevo Análisis
               </Button>
-              <Button
-                onClick={onClose}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-              >
+              <Button onClick={onClose} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
                 Finalizar
               </Button>
             </div>

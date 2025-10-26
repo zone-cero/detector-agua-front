@@ -134,8 +134,8 @@ const HistoryListModal: React.FC<HistoryListModalProps> = ({
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).onerror = null
-                            ; (e.target as HTMLImageElement).src =
-                              'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-image-off"><path d="M10.5 8.5h.01"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9c0-.6.4-1.2.9-1.6L4 4"/></svg>'
+                              ; (e.target as HTMLImageElement).src =
+                                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-image-off"><path d="M10.5 8.5h.01"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9c0-.6.4-1.2.9-1.6L4 4"/></svg>'
                           }}
                         />
                       </div>
@@ -229,8 +229,8 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
                   className="w-full h-64 object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).onerror = null
-                    ; (e.target as HTMLImageElement).src =
-                      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-image-off"><path d="M10.5 8.5h.01"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9c0-.6.4-1.2.9-1.6L4 4"/></svg>'
+                      ; (e.target as HTMLImageElement).src =
+                        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-image-off"><path d="M10.5 8.5h.01"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9c0-.6.4-1.2.9-1.6L4 4"/></svg>'
                   }}
                 />
               </div>
@@ -428,7 +428,7 @@ const getCurrentDrawnPolygon = (featureGroupRef: React.RefObject<L.FeatureGroup>
 
   const geoJson = featureGroupRef.current.toGeoJSON();
   const wktLocation = convertToWKT(geoJson);
-  
+
   return {
     geoJson,
     wktLocation,
@@ -594,7 +594,7 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
   // Función para crear nuevo análisis desde historial
   const handleCreateNewAnalysisFromHistory = () => {
     const polygonData = getCurrentDrawnPolygon(featureGroupRef);
-    
+
     if (!polygonData || polygonData.drawnItemsCount === 0) {
       toast.error("Debes dibujar un polígono en el mapa antes de crear un análisis", { icon: "⚠️" })
       return
@@ -612,10 +612,61 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
     toast.success("Abriendo formulario de análisis...", { icon: "🚀" })
   }
 
+  // Función para crear nuevo análisis desde polígono existente
+  // Función para crear nuevo análisis desde polígono existente
+  const handleCreateNewAnalysisFromPolygon = (ecosystem: Ecosystem, polygonCoords: [number, number][]) => {
+    // Limpiar cualquier polígono dibujado anteriormente
+    if (featureGroupRef.current) {
+      featureGroupRef.current.clearLayers();
+    }
+
+    // Crear un polígono temporal en el feature group
+    const polygon = L.polygon(polygonCoords, {
+      color: "#1a73e8",
+      fillColor: "#1a73e8",
+      fillOpacity: 0.2,
+      weight: 3,
+    });
+
+    if (featureGroupRef.current) {
+      featureGroupRef.current.addLayer(polygon);
+      setDrawnItemsCount(1);
+    }
+
+    // Preparar datos para el análisis
+    const polygonData = {
+      geoJson: {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Polygon",
+              coordinates: [polygonCoords.map(coord => [coord[1], coord[0]])] // Leaflet usa [lat, lng], GeoJSON usa [lng, lat]
+            },
+            properties: {}
+          }
+        ]
+      },
+      wktLocation: `SRID=4326;POLYGON ((${polygonCoords.map(coord => `${coord[1]} ${coord[0]}`).join(", ")}))`,
+      drawnItemsCount: 1
+    };
+
+    const analysisData = {
+      ...polygonData,
+      locationName: ecosystem.name,
+      ecosystemId: ecosystem.id.toString()
+    };
+
+    setPolygonDataForAnalysis(analysisData);
+    setIsAnalyzerModalOpen(true);
+    toast.success(`Creando nuevo análisis para ${ecosystem.name}`, { icon: "🚀" });
+  };
+
   // Función para crear nuevo análisis
   const handleCreateNewAnalysis = () => {
     const polygonData = getCurrentDrawnPolygon(featureGroupRef);
-    
+
     if (!polygonData || polygonData.drawnItemsCount === 0) {
       toast.error("Debes dibujar un polígono en el mapa antes de crear un análisis", { icon: "⚠️" })
       return
@@ -823,7 +874,7 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
   // FUNCIÓN CORREGIDA PARA MANEJAR EL CLIC EN ANALIZAR
   const handleAnalyzeClick = () => {
     const polygonData = getCurrentDrawnPolygon(featureGroupRef);
-    
+
     if (!polygonData || polygonData.drawnItemsCount === 0) {
       toast.error("Debes dibujar un polígono en el mapa antes de analizar", { icon: "⚠️" });
       return;
@@ -832,7 +883,7 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
     // Si hay un ecosistema seleccionado, usar sus datos
     let ecosystemId = "new";
     let finalLocationName = locationName;
-    
+
     if (selectedEcosystem) {
       ecosystemId = selectedEcosystem.id.toString();
       finalLocationName = selectedEcosystem.name;
@@ -1126,7 +1177,6 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
           <DrawControl featureGroupRef={featureGroupRef} onCountUpdate={updateDrawnItemsCount} />
 
           {mapCenter && <MapViewController center={mapCenter} zoom={14} />}
-
           {selectedPolygonCoords && selectedEcosystem && (
             <Polygon
               positions={selectedPolygonCoords}
@@ -1138,18 +1188,56 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
               }}
             >
               <Popup>
-                <div className="text-sm space-y-2 min-w-[200px]">
-                  <div className="font-semibold text-gray-900">{selectedEcosystem?.name}</div>
+                <div className="text-sm space-y-2 min-w-[250px]">
+                  <div className="font-semibold text-gray-900 text-base">{selectedEcosystem?.name}</div>
                   <div className="text-xs text-gray-600">ID: {selectedEcosystem?.id}</div>
-                  {/* Botón "Ver Historial" */}
-                  <div className="mt-2 pt-2 border-t border-gray-200">
+
+                  {/* Información del ecosistema */}
+                  <div className="mt-3 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="text-xs text-gray-700">
+                      <div className="flex justify-between">
+                        <span>Creado:</span>
+                        <span>{new Date(selectedEcosystem.created_at).toLocaleDateString("es-ES")}</span>
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span>Polígono:</span>
+                        <span className="text-green-600 font-medium">Definido</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-blue-600 font-medium mt-2 text-center">
+                    💡 Selecciona una acción para este ecosistema
+                  </div>
+
+                  {/* Botones de acción */}
+                  <div className="mt-3 space-y-2">
                     <button
-                      onClick={() => handleViewHistory(selectedEcosystem.id)}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                      onClick={() => {
+                        handleCreateNewAnalysisFromPolygon(selectedEcosystem, selectedPolygonCoords);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-green-600 border border-green-600 rounded-lg hover:bg-green-700 hover:border-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+                    >
+                      <Plus className="w-4 w-4" />
+                      Crear Nuevo Análisis
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        handleViewHistory(selectedEcosystem.id);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-700 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                     >
                       <Clock className="w-4 w-4" />
-                      Ver Historial
+                      Ver Historial de Análisis
                     </button>
+                  </div>
+
+                  {/* Información adicional */}
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <div className="text-xs text-gray-500 text-center">
+                      Haz clic en el polígono nuevamente para cerrar
+                    </div>
                   </div>
                 </div>
               </Popup>

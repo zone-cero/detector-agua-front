@@ -1,217 +1,131 @@
 'use client'
 
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { Eye, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Button } from './ui/button'
 import { useRef, useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation' // NUEVO: Importar useRouter
-
+import { useRouter } from 'next/navigation'
 
 const stagger = {
-  animate: {
-    transition: {
-      staggerChildren: 0.04,
-    },
-  },
+  animate: { transition: { staggerChildren: 0.1 } },
 };
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 5.0, ease: [0.4, 0, 0.5, 1] },
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.2, 0.8, 0.2, 1] } },
 };
 
 export function HeroImage() {
-  const ref = useRef(null)
+  const ref = useRef(null);
+  const router = useRouter();
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ['start end', 'end start']
-  })
-  const router = useRouter() // NUEVO: Obtener el router
+    offset: ['start start', 'end start']
+  });
 
-  // Estado para la posición del cursor
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [isHoveringButton, setIsHoveringButton] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: -100, y: -100 });
 
-  // Efecto para seguir el cursor
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY })
-    }
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-    }
-  }, [])
+  const yText = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
+  const yImage = useTransform(scrollYProgress, [0, 1], ['0%', '-10%']);
 
-  const yBackground = useTransform(scrollYProgress, [0, 1], ['-20%', '20%'])
-  const yMap = useTransform(scrollYProgress, [0, 1], ['10%', '-10%'])
+  const handleRedirectToAnalyzer = () => router.push('/#dashboard');
+  const handleRedirectToHistory = () => router.push('/historico');
 
-  // NUEVO: Funciones de redirección separadas
-  const handleRedirectToAnalyzer = () => {
-    // Redirige al analizador de imágenes
-    window.location.href = '/#dashboard'
-  }
-
-  const handleRedirectToHistory = () => {
-    // Redirige a la página de histórico
-    router.push('/historico')
-  }
-
- return (
-  <section ref={ref} className="pt-20 pb-0 px-6 relative overflow-hidden min-h-[500px] lg:min-h-screen">
-    
-    {/* Imagen de Fondo del Hero */}
-    <div 
-      className="absolute inset-0 z-0" 
-      style={{
-        backgroundImage: `url('/imagenes/Gemini_Generated_Image_sgf3bpsgf3bpsgf3.png')`, 
-        backgroundSize: 'cover', 
-        backgroundPosition: 'center', 
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
-        {/* Mask solo en la parte inferior */}
+  return (
+    <section ref={ref} className="relative w-full min-h-screen flex items-center pt-32 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      
+      {/* Fondo e iluminación sutil */}
+      <div className="absolute inset-0 z-0">
         <div 
-          className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/70 to-transparent"
-        ></div>
-        
-        {/* Overlay general más suave */}
-        <div className="absolute inset-0 bg-black/20"></div>
-    </div>
-    
-    {/* Bolita que sigue el cursor */}
-    <motion.div
-      className="fixed pointer-events-none z-50 mix-blend-difference"
-      animate={{
-        x: mousePosition.x - 15,
-        y: mousePosition.y - 15,
-        scale: isHoveringButton ? 1.5 : 1,
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 500,
-        damping: 28,
-        mass: 0.5
-      }}
-    >
-      <div className={`w-8 h-8 rounded-full ${isHoveringButton
-        ? 'bg-purple-400 blur-[1px]'
-        : 'bg-gradient-to-br from-purple-500 to-pink-500'
-        } transition-all duration-300 ${isHoveringButton ? 'opacity-80' : 'opacity-60'
-        } shadow-lg`} />
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url('/imagenes/Gemini_Generated_Image_sgf3bpsgf3bpsgf3.png')` }}
+        />
+        <div className="absolute inset-0 bg-black/60" 
+             style={{ background: 'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.8))' }}
+        />
+      </div>
 
-      <div className={`absolute inset-0 rounded-full ${isHoveringButton
-        ? 'bg-purple-300 animate-pulse'
-        : 'bg-purple-400'
-        } blur-md opacity-30 -z-10 transition-all duration-300`} />
-    </motion.div>
-
-    {/* Background Elements con Paralaje */}
-    <motion.div
-      className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-slate-50/30 z-10"
-      style={{ y: yBackground }}
-    ></motion.div>
-    <motion.div
-      className="absolute top-1/2 left-1/4 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl z-10"
-      style={{ y: yBackground }}
-    ></motion.div>
-    <motion.div
-      className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-slate-100/30 rounded-full blur-3xl z-10"
-      style={{ y: yBackground }}
-    ></motion.div>
-
-    <div className="max-w-7xl mx-auto relative">
+      {/* Spotlight del mouse */}
       <motion.div
-        className="grid lg:grid-cols-2 gap-20 items-center"
-        initial="initial"
-        animate="animate"
-        variants={stagger}
-      >
-        <motion.div className="space-y-10 max-w-6xl" variants={fadeInUp}>
-          <div className="space-y-4 relative">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-300 to-pink-300 opacity-30 blur-3xl z-0"></div>
-
-            <h1 className="text-6xl lg:text-5xl font-light text-white leading-snug relative z-10">
-              <span className="block font-semibold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                Análisis de Imágenes
-              </span>
-              <span className="block font-semibold bg-gradient-to-r from-gray-200 to-gray-300 bg-clip-text text-transparent">
-                para Monitoreo
-              </span>
-              <span className="block font-light text-gray-300">
-                Hídrico y Vegetal
-              </span>
-            </h1>
-
-            <p className="text-lg lg:text-xl text-gray-200 leading-relaxed max-w-xl z-10">
-              Sistema para cuantificar áreas de agua y Lirio en imágenes. Permite comparar los cambios históricos y monitorear ecosistemas.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-5 relative z-10">
-            <Button
-              className="bg-white text-gray-800 border border-gray-600 
-              transition ease-in-out duration-300 hover:bg-gray-100"
-              size="lg"
-              onClick={handleRedirectToHistory}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(156, 163, 175)';
-                e.currentTarget.style.transform = 'translateY(-3px)';
-                setIsHoveringButton(true);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.transform = 'translateY(0)';
-                setIsHoveringButton(false);
-              }}
-            >
-              Ver Historial
-            </Button>
-
-            <Button
-              className="bg-transparent text-red-300 border border-red-300 
-              transition ease-in-out duration-300 hover:bg-red-900/10"
-              variant="secondary"
-              size="lg"
-              onClick={handleRedirectToAnalyzer}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 6px 0 0 rgb(248, 113, 113)';
-                e.currentTarget.style.transform = 'translateY(-3px)';
-                setIsHoveringButton(true);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.transform = 'translateY(0)';
-                setIsHoveringButton(false);
-              }}
-            >
-              Analizar Imagen
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </motion.div>
-
+        className="fixed top-0 left-0 z-50 w-96 h-96 pointer-events-none opacity-40"
+        style={{
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1), transparent 70%)',
+        }}
+        animate={{ x: mousePosition.x - 192, y: mousePosition.y - 192 }}
+        transition={{ type: 'tween', ease: 'backOut', duration: 0.5 }}
+      />
+      
+      <div className="relative z-10 w-full max-w-7xl mx-auto">
         <motion.div
-          className="relative p-8"
-          variants={fadeInUp}
+          className="grid lg:grid-cols-2 gap-16 items-center"
+          initial="initial"
+          animate="animate"
+          variants={stagger}
         >
-          <motion.div
-            className="relative z-10 w-full rounded-xl overflow-hidden"
-            style={{
-              y: yMap,
-            }}
-          >
+          {/* Contenido de Texto */}
+          <motion.div style={{ y: yText }} variants={fadeInUp}>
+            <div className="flex flex-col text-left space-y-8">
+              <h1 className="text-5xl lg:text-7xl font-light text-white tracking-tight leading-tight">
+                Análisis Ambiental
+                <span className="block font-semibold mt-2 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                  Impulsado por Datos
+                </span>
+              </h1>
+              <p className="text-xl text-gray-300 leading-relaxed max-w-lg font-light">
+                Cuantifica áreas de agua y vegetación con precisión satelital. Monitoreo histórico y gestión de ecosistemas en una sola plataforma.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-5 pt-4">
+                {/* Botón Principal (Estilo sólido con borde inferior al hover) */}
+                <Button
+                  size="lg"
+                  className="bg-white text-gray-900 font-semibold px-8 py-6 text-base
+                             border-2 border-white
+                             transition-all duration-300 ease-out
+                             hover:-translate-y-1 hover:shadow-[0_6px_0_0_#9ca3af]"
+                  onClick={handleRedirectToAnalyzer}
+                >
+                  Analizar Imagen
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+
+                {/* Botón Secundario (Estilo outline con borde inferior al hover) */}
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  className="text-white font-medium px-8 py-6 text-base
+                             border-2 border-white/30
+                             hover:bg-transparent hover:border-white
+                             transition-all duration-300 ease-out
+                             hover:-translate-y-1 hover:shadow-[0_6px_0_0_#ffffff]"
+                  onClick={handleRedirectToHistory}
+                >
+                  Ver Historial
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Imagen Derecha (Limpia, sin fondo) */}
+          <motion.div style={{ y: yImage }} variants={fadeInUp} className="relative flex justify-center lg:justify-end">
             <img
               src="/imagenes/Blank_map_of_Hidalgo_1_.png"
               alt="Mapa de Hidalgo"
-              className="w-full h-auto object-cover opacity-100"
+              // drop-shadow-2xl ayuda a que la imagen transparente resalte sobre el fondo complejo sin necesitar un contenedor
+              className="w-full max-w-lg h-auto object-contain drop-shadow-2xl"
             />
           </motion.div>
+
         </motion.div>
-      </motion.div>
-    </div>
-  </section>
-)
+      </div>
+    </section>
+  )
 }
