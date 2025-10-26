@@ -22,6 +22,9 @@ import "leaflet/dist/leaflet.css"
 import "leaflet-draw/dist/leaflet.draw.css"
 import "leaflet-geosearch/dist/geosearch.css"
 
+// Importar tu hook personalizado
+import { useIsMobile } from "@/hooks/use-mobile"
+
 // Fix broken Leaflet icons in React
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -562,7 +565,10 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
   const [locationName, setLocationName] = useState("")
   const [drawnItemsCount, setDrawnItemsCount] = useState(0)
   const [isPanelOpen, setIsPanelOpen] = useState(true)
-  const [isMobile, setIsMobile] = useState(false)
+  
+  // Usar tu hook personalizado en lugar del código anterior
+  const isMobile = useIsMobile()
+  
   const featureGroupRef = useRef<L.FeatureGroup>(null)
 
   const [isAnalyzerModalOpen, setIsAnalyzerModalOpen] = useState(false)
@@ -574,24 +580,6 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
   const [historicalImages, setHistoricalImages] = useState<HistoricalImage[]>([])
   const [selectedImage, setSelectedImage] = useState<HistoricalImage | null>(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
-
-  // Detectar si es móvil - CORREGIDO
-  useEffect(() => {
-    const checkMobile = () => {
-      // Verificación segura de window
-      if (typeof window !== 'undefined') {
-        setIsMobile(window.innerWidth < 768)
-      }
-    }
-
-    // Solo ejecutar en el cliente
-    if (typeof window !== 'undefined') {
-      checkMobile()
-      window.addEventListener('resize', checkMobile)
-
-      return () => window.removeEventListener('resize', checkMobile)
-    }
-  }, [])
 
   // Función para navegar al inicio
   const handleGoHome = () => {
