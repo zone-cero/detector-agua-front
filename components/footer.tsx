@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Mail, Phone, MapPin } from "lucide-react"
+import { Mail, Phone, MapPin, Twitter, Linkedin } from "lucide-react"
 
 export function Footer() {
   const contactItems = [
@@ -14,34 +14,33 @@ export function Footer() {
   const navLinks = [
     { name: "Características", href: "#features" },
     { name: "Herramientas", href: "#tools" },
-    // Add more links as needed
   ]
 
   return (
-    <footer className="bg-gray-200 border-t border-gray-300">
+    <footer className="bg-gray-200 text-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* === Top Section: Main content === */}
-        <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Column 1: Logo and Description */}
-          <div className="lg:col-span-4">
+        
+        {/* === Zona 1: Logo Principal y Descripción === */}
+        <div className="py-12 flex flex-col md:flex-row items-start justify-between gap-8 border-b border-gray-300">
+          <div className="flex-shrink-0">
             <Image
               src="/imagenes/logo_gobierno_gold_ef3adc17fb.png"
-              alt="Logo de Gobierno"
-              width={200}
-              height={50}
+              alt="Logo del Sistema de Monitoreo"
+              width={240}
+              height={60}
               className="object-contain"
             />
-            <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-xs">
-              Plataforma para la cuantificación y análisis de cuerpos de agua y cobertura vegetal.
-            </p>
           </div>
+          <p className="text-sm text-gray-600 leading-relaxed max-w-md md:text-right">
+            Plataforma integral para la cuantificación y el análisis del área de cuerpos de agua y cobertura vegetal, promoviendo la gestión precisa de los recursos naturales.
+          </p>
+        </div>
 
-          {/* Column 2: Navigation Links */}
-          <div className="lg:col-span-2 lg:col-start-7">
-            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">
-              Navegación
-            </h3>
+        {/* === Zona 2: Columnas de Navegación, Contacto y Respaldo === */}
+        <div className="py-12 grid grid-cols-1 md:grid-cols-12 gap-8">
+          
+          <div className="md:col-span-3">
+            <h3 className="text-xs font-semibold text-gray-800 tracking-wider uppercase">Navegación</h3>
             <ul className="mt-4 space-y-3">
               {navLinks.map((link) => (
                 <li key={link.name}>
@@ -52,20 +51,14 @@ export function Footer() {
               ))}
             </ul>
           </div>
-          
-          {/* Column 3: Contact Info */}
-          <div className="lg:col-span-4">
-            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">
-              Contacto
-            </h3>
-            <ul className="mt-4 space-y-3">
+
+          <div className="md:col-span-4">
+            <h3 className="text-xs font-semibold text-gray-800 tracking-wider uppercase">Contacto</h3>
+            <ul className="mt-4 space-y-4">
               {contactItems.map((item, index) => (
                 <li key={index}>
-                  <a
-                    href={item.href}
-                    className="flex items-start group text-sm text-gray-600 transition-colors hover:text-blue-600"
-                  >
-                    <item.icon className="w-4 h-4 mr-3 mt-0.5 flex-shrink-0 text-gray-400 transition-colors group-hover:text-blue-500" aria-hidden="true" />
+                  <a href={item.href} className="flex items-start group text-sm text-gray-600 transition-colors hover:text-blue-600">
+                    <item.icon className="w-4 h-4 mr-3 mt-0.5 flex-shrink-0 text-gray-500 group-hover:text-blue-500" />
                     <span>{item.text}</span>
                   </a>
                 </li>
@@ -73,32 +66,41 @@ export function Footer() {
             </ul>
           </div>
 
+          <div className="md:col-span-5 md:pl-8">
+            <h3 className="text-xs font-semibold text-gray-800 tracking-wider uppercase">Respaldo Institucional</h3>
+            <div className="mt-4 flex items-center gap-8">
+              <a href="#" aria-label="Logo del Gobierno de Hidalgo">
+                <Image 
+                  src="/imagenes/Logo_gob_hidalgo.svg" 
+                  alt="Logo Gobierno de Hidalgo" 
+                  width={160} 
+                  height={40} 
+                  className="object-contain"
+                />
+              </a>
+              <a href="#" aria-label="Escudo del Estado de Hidalgo">
+                <Image 
+                  src="/imagenes/Escudo_de_Armas_Oficial_del_Estado_de_Hidalgo.png" 
+                  alt="Escudo de Hidalgo" 
+                  width={60} 
+                  height={60} 
+                  className="object-contain" 
+                />
+              </a>
+            </div>
+          </div>
         </div>
-
-        {/* === Bottom Bar: Copyright and Institutional Logos === */}
-        <div className="py-8 border-t border-gray-200/80 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <span className="text-xs text-gray-500">
-            © {new Date().getFullYear()} Sistema de Monitoreo de Cuerpos de Agua. Todos los derechos reservados.
+      </div>
+      
+      {/* === Zona 3: Barra Inferior de Copyright y Redes Sociales === */}
+      <div className="bg-gray-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-xs text-gray-600 text-center sm:text-left">
+            © {new Date().getFullYear()} Sistema de Monitoreo de Cuerpos de Agua.
           </span>
-          <div className="flex items-center gap-6">
-            <a href="#" aria-label="Escudo del Estado de Hidalgo">
-              <Image 
-                src="/imagenes/Escudo_de_Armas_Oficial_del_Estado_de_Hidalgo.png" 
-                alt="Escudo de Hidalgo" 
-                width={40} 
-                height={40} 
-                className="object-contain grayscale opacity-70 transition hover:opacity-100 hover:grayscale-0" 
-              />
-            </a>
-            <a href="#" aria-label="Logo del Gobierno de Hidalgo">
-              <Image 
-                src="/imagenes/Logo_gob_hidalgo.svg" 
-                alt="Logo Gobierno de Hidalgo" 
-                width={120} 
-                height={30} 
-                className="object-contain grayscale opacity-70 transition hover:opacity-100 hover:grayscale-0"
-              />
-            </a>
+          <div className="flex items-center gap-4">
+            <a href="#" className="text-gray-500 hover:text-gray-800 transition-colors"><Twitter className="w-5 h-5" /></a>
+            <a href="#" className="text-gray-500 hover:text-gray-800 transition-colors"><Linkedin className="w-5 h-5" /></a>
           </div>
         </div>
       </div>

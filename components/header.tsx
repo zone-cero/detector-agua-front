@@ -51,16 +51,22 @@ export function Header() {
           ${isScrolled ? "bg-white/80 backdrop-blur-lg border-b border-gray-200/80 shadow-sm" : "bg-white"}
           ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
       >
-        {/* Decorative geometric shape */}
+        {/* Decorative geometric shape - Left */}
         <div className="absolute top-0 left-0 w-32 h-32 pointer-events-none" aria-hidden="true">
           <svg className="absolute w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path d="M 0 0 L 100 0 L 0 100 Z" fill="currentColor" className="text-gray-500/5" />
+            <path d="M 0 0 L 100 0 L 0 100 Z" fill="currentColor" className="text-gray-500/20" />
           </svg>
         </div>
-        
+
+        {/* Decorative geometric shape - Right */}
+        <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none" aria-hidden="true">
+          <svg className="absolute w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M 100 0 L 0 0 L 100 100 Z" fill="currentColor" className="text-gray-500/20" />
+          </svg>
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            
+
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 flex items-center gap-3">
               <Image
@@ -112,7 +118,7 @@ export function Header() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setIsSidebarOpen(false)}
             />
-            
+
             {/* Sidebar Panel */}
             <motion.div
               initial={{ x: "100%" }}

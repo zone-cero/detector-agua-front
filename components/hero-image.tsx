@@ -55,9 +55,9 @@ export function HeroImage() {
 
       {/* Spotlight del mouse */}
       <motion.div
-        className="fixed top-0 left-0 z-50 w-96 h-96 pointer-events-none opacity-40"
+        className="fixed top-0 left-0 z-50 w-96 h-96 pointer-events-none opacity-80"
         style={{
-          background: 'radial-gradient(circle, rgba(255,255,255,0.1), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1), transparent 40%)',
         }}
         animate={{ x: mousePosition.x - 192, y: mousePosition.y - 192 }}
         transition={{ type: 'tween', ease: 'backOut', duration: 0.5 }}

@@ -8,6 +8,11 @@ import { Calendar, TrendingUp, Camera, ArrowLeft, Loader2 } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import Link from "next/link"
 
+import { useRouter } from 'next/navigation'
+
+
+
+
 interface Ecosystem {
   id: number
   name: string
@@ -47,6 +52,11 @@ export default function HistoricoPage() {
         console.error("Error loading AOS:", e)
       }
     }
+
+    const handleReload = () => {
+      router.refresh()
+    }
+
 
     const fetchData = async () => {
       setLoading(true)
@@ -119,7 +129,7 @@ export default function HistoricoPage() {
         <div className="container mx-auto mt-20 text-center">
           <h2 className="text-3xl font-bold text-red-600 mb-4">Error de Carga de Datos</h2> {/* Eliminado emoji */}
           <p className="text-muted-foreground">{error}</p>
-          <Button onClick={() => window.location.reload()} className="mt-6">
+          <Button onClick={handleReload} className="mt-6">
             Recargar Página
           </Button>
         </div>
@@ -128,203 +138,154 @@ export default function HistoricoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-gray-50 text-gray-800">
 
-      <section className="py-20 bg-gradient-to-br from-background to-muted">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
+      {/* === Hero Section: Se mantiene el diseño premium === */}
+      <section className="relative pt-32 pb-48">
+        <div className="absolute inset-0 z-0">
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-80"
+            style={{ backgroundImage: `url('/imagenes/Gemini_Generated_Image_sgf3bpsgf3bpsgf3.png')` }}
+          />
+          <div className="absolute inset-0 bg-black/50"
+            style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7))' }}
+          />
+        </div>
+
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
             <Link
               href="/"
-              className="inline-flex items-center text-primary hover:text-primary/80 mb-6 font-medium" // Añadido font-medium
-              data-aos="fade-right"
+              className="inline-flex items-center text-gray-300 transition-colors hover:text-white mb-6 font-medium text-sm"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al Inicio
+              Volver a la Página Principal
             </Link>
-            <div className="text-center">
-              <h1 className="font-serif font-black text-4xl md:text-6xl text-foreground mb-6" data-aos="fade-up">
-                Monitoreo <span className="text-primary">Histórico</span>
-              </h1> {/* Titulo simplificado */}
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="200">
-                Revisión de la evolución del área de agua y Lirio en los ecosistemas a lo largo del tiempo.
-              </p> {/* Descripción ajustada al contexto */}
-            </div>
+            <h1 className="text-5xl md:text-6xl font-semibold text-white tracking-tight">
+              Monitoreo Histórico
+            </h1>
+            <p className="mt-4 text-lg text-gray-300 max-w-2xl mx-auto">
+              Explore la evolución de los cuerpos de agua, analice tendencias y visualice el registro completo de capturas.
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-background">
+      {/* === Panel de Contenido Principal: Diseño limpio y superpuesto === */}
+      <section className="relative z-10 -mt-32 pb-24">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* CARD 1: Últimos Registros */}
-            <Card className="group hover:shadow-lg transition-all duration-300" data-aos="fade-up" data-aos-delay="100">
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  
-                  <div>
-                    <CardTitle className="font-serif font-bold">Ecosistemas Recientes</CardTitle>
-                    <CardDescription>Cuerpos de agua recién configurados para análisis.</CardDescription> {/* Descripción ajustada */}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {processedData.recentEcosystems.map((eco) => (
-                    <div key={eco.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm text-primary">{eco.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Fecha de Creación: {new Date(eco.created_at).toLocaleDateString("es-ES")}
-                        </p>
-                      </div>
-                      <Badge variant="secondary">ID: {eco.id}</Badge>
-                    </div>
-                  ))}
-                  {processedData.totalEcosystems === 0 && (
-                    <p className="text-center text-muted-foreground">No hay ecosistemas registrados en el sistema.</p>
-                  )}
-                </div>
-                <Link href="/historico/linea-tiempo">
-                  <Button className="w-full" disabled={processedData.totalEcosystems === 0}>
-                    Ver Todos los Ecosistemas ({processedData.totalEcosystems} Registros)
-                  </Button> {/* Texto más formal */}
-                </Link>
-              </CardContent>
-            </Card>
+          <div className="bg-white rounded-xl shadow-lg ring-1 ring-gray-900/5 p-8 sm:p-10 space-y-12">
 
-            {/* CARD 2: Promedio Histórico */}
-            <Card className="group hover:shadow-lg transition-all duration-300" data-aos="fade-up" data-aos-delay="200">
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  
-                  <div>
-                    <CardTitle className="font-serif font-bold">Métricas Históricas</CardTitle>
-                    <CardDescription>Valores promedio de cobertura cuantificada.</CardDescription> {/* Descripción ajustada */}
-                  </div>
+            {/* --- Fila 1: Ecosistemas y Métricas --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+              {/* CARD 1: Ecosistemas Recientes */}
+              <div className="bg-white rounded-lg">
+                <div className="pb-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Ecosistemas Recientes</h3>
+                  <p className="text-sm text-gray-500 mt-1">Cuerpos de agua recién configurados para análisis.</p>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {/* Cobertura Lirio */}
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm">Cobertura Vegetal (%)</p>
-                      <p className="text-xs text-muted-foreground">Promedio en {processedData.totalImages} capturas</p> {/* Cambiado 'tomas' por 'capturas' */}
+                <div className="mt-4">
+                  <ul className="divide-y divide-gray-200">
+                    {processedData.recentEcosystems.map((eco) => (
+                      <li key={eco.id} className="flex items-center justify-between py-3">
+                        <div>
+                          <p className="font-medium text-sm text-blue-600">{eco.name}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Creado: {new Date(eco.created_at).toLocaleDateString("es-ES")}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="font-mono text-xs">ID: {eco.id}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Link href="/historico/linea-tiempo" className="mt-4 block">
+                  <Button className="w-full bg-gray-800 hover:bg-gray-900 text-white" disabled={processedData.totalEcosystems === 0}>
+                    Ver todos los Ecosistemas ({processedData.totalEcosystems})
+                  </Button>
+                </Link>
+              </div>
+
+              {/* CARD 2: Métricas Históricas */}
+              <div className="bg-white rounded-lg">
+                <div className="pb-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Métricas Históricas</h3>
+                  <p className="text-sm text-gray-500 mt-1">Valores promedio de {processedData.totalImages} capturas.</p>
+                </div>
+                <div className="mt-4 space-y-5">
+                  {/* Cobertura Vegetal */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="font-medium text-sm text-gray-700">Cobertura Vegetal</p>
+                      <span className="text-sm font-semibold text-green-600">{processedData.avgVegetation}%</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 h-2 bg-green-200 rounded-full">
-                        <div
-                          className="h-2 bg-green-500 rounded-full"
-                          style={{ width: `${Math.min(100, Number.parseFloat(processedData.avgVegetation))}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium text-green-600">{processedData.avgVegetation}%</span>
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-green-500" style={{ width: `${processedData.avgVegetation}%` }} />
                     </div>
                   </div>
                   {/* Cobertura Agua */}
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm">Área de Agua (%)</p>
-                      <p className="text-xs text-muted-foreground">Promedio en {processedData.totalImages} capturas</p> {/* Cambiado 'tomas' por 'capturas' */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="font-medium text-sm text-gray-700">Área de Agua</p>
+                      <span className="text-sm font-semibold text-blue-600">{processedData.avgWater}%</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 h-2 bg-blue-200 rounded-full">
-                        <div
-                          className="h-2 bg-blue-500 rounded-full"
-                          style={{ width: `${Math.min(100, Number.parseFloat(processedData.avgWater))}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium text-blue-600">{processedData.avgWater}%</span>
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-blue-500" style={{ width: `${processedData.avgWater}%` }} />
                     </div>
                   </div>
-                 
                 </div>
-                <Link href="/historico/tendencias">
-                  <Button className="w-full">Revisar Tendencias y Comparativas</Button> {/* Texto más formal */}
+                <Link href="/historico/tendencias" className="mt-6 block">
+                  <Button className="w-full" variant="outline">Revisar Tendencias Detalladas</Button>
                 </Link>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </div>
 
-          {/* CARD 3: Galería Fotográfica */}
-          <div className="mb-12">
-            <Card className="group hover:shadow-lg transition-all duration-300" data-aos="fade-up" data-aos-delay="300">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-chart-3/10 rounded-lg flex items-center justify-center">
-                      <Camera className="w-6 h-6 text-chart-3" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-serif font-bold">Registro de Capturas</CardTitle> {/* Título simplificado */}
-                      <CardDescription>
-                        Visualización del histórico de imágenes - {processedData.totalImages.toLocaleString()} capturas disponibles
-                      </CardDescription> {/* Cambiado 'fotográfica' por 'capturas' y 'imágenes' por 'capturas' */}
-                    </div>
+            {/* --- Fila 2: Galería de Imágenes --- */}
+            <div className="bg-white rounded-lg">
+              <div className="pb-4 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Registro de Capturas</h3>
+                    <p className="text-sm text-gray-500 mt-1">{processedData.totalImages.toLocaleString()} imágenes disponibles para análisis.</p>
                   </div>
                   <Link href="/historico/galeria">
-                    <Button variant="outline" size="sm" disabled={processedData.totalImages === 0}>
-                      Ver Galería
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto" disabled={processedData.totalImages === 0}>
+                      Ver Galería Completa
                     </Button>
                   </Link>
                 </div>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <div className="mt-6">
                 {processedData.totalImages === 0 ? (
-                  <div className="aspect-[16/9] bg-muted rounded-lg flex items-center justify-center">
-                    <p className="text-muted-foreground text-sm">No se han cargado capturas de imágenes.</p> {/* Texto ajustado */}
+                  <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <p className="text-gray-500">No hay capturas disponibles en el sistema.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {processedData.recentImages.map((img, index) => (
-                      <div
-                        key={img.id}
-                        className={`relative rounded-lg overflow-hidden group/img hover:shadow-xl transition-all duration-300 ${
-                          index === 0 ? "col-span-2 row-span-2" : ""
-                        }`}
-                      >
-                        <div className={`${index === 0 ? "aspect-square" : "aspect-[4/3]"} bg-muted`}>
-                          <img
-                            src={img.image || "/placeholder.svg"}
-                            alt={`Ecosistema ${img.ecosystem} - ${new Date(img.capture_date).toLocaleDateString()}`}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110"
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-300">
-                          <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                            <p className="text-xs font-medium mb-1">ID Ecosistema: {img.ecosystem}</p> {/* Etiqueta más formal */}
-                            <div className="flex items-center gap-2 text-xs">
-                              {/* Eliminados emojis de los badges */}
-                              <Badge className="bg-green-500/80 hover:bg-green-500">
-                                Veg: {img.vegetation_percentage.toFixed(1)}%
-                              </Badge>
-                              <Badge className="bg-blue-500/80 hover:bg-blue-500">
-                                Agua: {img.water_percentage.toFixed(1)}%
-                              </Badge>
-                            </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {processedData.recentImages.map((img) => (
+                      <div key={img.id} className="relative rounded-lg overflow-hidden group/image aspect-[4/3]">
+                        <img
+                          src={img.image || "/placeholder.svg"}
+                          alt={`Captura del ecosistema ${img.ecosystem}`}
+                          className="w-full h-full object-cover transition-all duration-500 ease-in-out group-hover/image:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-lg" />
+                        <div className="absolute bottom-0 left-0 right-0 p-3 text-white text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">ID Eco: {img.ecosystem}</span>
+                            <span className="font-mono text-gray-200">
+                              {new Date(img.capture_date).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "2-digit" })}
+                            </span>
                           </div>
                         </div>
-                        <Badge className="absolute top-2 right-2 opacity-90" variant="secondary">
-                          {new Date(img.capture_date).toLocaleDateString("es-ES", {
-                            day: "numeric",
-                            month: "short",
-                          })}
-                        </Badge>
                       </div>
                     ))}
                   </div>
                 )}
-                <div className="mt-6 flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Mostrando {Math.min(12, processedData.totalImages)} de {processedData.totalImages} capturas.
-                  </p> {/* Texto ajustado */}
-                  <Link href="/historico/galeria">
-                    <Button disabled={processedData.totalImages === 0}>Explorar Galería Completa</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
