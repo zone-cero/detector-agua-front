@@ -576,6 +576,9 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
 
   // Detectar si es móvil
   useEffect(() => {
+    // Verificación segura
+    if (typeof window === 'undefined') return
+
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
@@ -585,6 +588,7 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
 
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
 
   // Función para navegar al inicio
   const handleGoHome = () => {
