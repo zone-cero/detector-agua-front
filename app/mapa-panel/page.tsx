@@ -1,4 +1,5 @@
-"use client"
+'use client'
+
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { MapContainer, TileLayer, FeatureGroup, useMap, LayersControl, Marker, Popup, Polygon } from "react-leaflet"
@@ -574,21 +575,23 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
   const [selectedImage, setSelectedImage] = useState<HistoricalImage | null>(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
-  // Detectar si es móvil
+  // Detectar si es móvil - CORREGIDO
   useEffect(() => {
-    // Verificación segura
-    if (typeof window === 'undefined') return
-
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      // Verificación segura de window
+      if (typeof window !== 'undefined') {
+        setIsMobile(window.innerWidth < 768)
+      }
     }
 
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
+    // Solo ejecutar en el cliente
+    if (typeof window !== 'undefined') {
+      checkMobile()
+      window.addEventListener('resize', checkMobile)
 
-    return () => window.removeEventListener('resize', checkMobile)
+      return () => window.removeEventListener('resize', checkMobile)
+    }
   }, [])
-
 
   // Función para navegar al inicio
   const handleGoHome = () => {
@@ -616,7 +619,6 @@ const MapComponent: React.FC<{ onAnalyze?: (data: any) => void }> = ({ onAnalyze
     toast.success("Abriendo formulario de análisis...", { icon: "🚀" })
   }
 
-  // Función para crear nuevo análisis desde polígono existente
   // Función para crear nuevo análisis desde polígono existente
   const handleCreateNewAnalysisFromPolygon = (ecosystem: Ecosystem, polygonCoords: [number, number][]) => {
     // Limpiar cualquier polígono dibujado anteriormente
